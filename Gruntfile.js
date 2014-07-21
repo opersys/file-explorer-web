@@ -84,7 +84,8 @@ module.exports = function (grunt) {
                     "assets/css/slick.grid.css",
                     "assets/css/slick-default-theme.css",
                     "assets/css/w2ui-1.3.1.min.css",
-                    "assets/css/style.css"
+                    "assets/css/style.css",
+                    "assets/css/style-jstree.css"
                 ],
                 dest: "dist/public/css/<%= pkg.name %>_styles.css"
             },
@@ -101,6 +102,7 @@ module.exports = function (grunt) {
                     "assets/jslib/moment.min.js",
                     "assets/jslib/smoothie.js",
                     "assets/jslib/w2ui-1.3.1.min.js",
+                    "assets/jslib/jstree.min.js",
                     "assets/jslib/slickgrid/slick.core.js",
                     "assets/jslib/slickgrid/slick.grid.js",
                     "assets/jslib/slickgrid/slick.formatters.js",
@@ -116,15 +118,10 @@ module.exports = function (grunt) {
                     nonull: true
                 },
                 src: [
-                    "assets/js/model.cpuinfo.js",
-                    "assets/js/model.logcat.js",
-                    "assets/js/model.meminfo.js",
                     "assets/js/model.options.js",
-                    "assets/js/model.process.js",
-                    "assets/js/view.chart.js",
-                    "assets/js/view.logcat.js",
-                    "assets/js/view.process.js",
-                    "assets/js/pstree.js"
+                    "assets/js/model.fs.js",
+                    "assets/js/view.fs.js",
+                    "assets/js/fs.js"
                 ],
                 dest: "dist/public/js/<%= pkg.name %>_main.js"
             }
@@ -157,7 +154,7 @@ module.exports = function (grunt) {
                 cwd: "dist"
             },
             md5sum: {
-                command: "md5sum out/process-explorer.zip | cut -f 1 -d ' ' > out/process-explorer.zip.md5sum"
+                command: "md5sum out/file-explorer.zip | cut -f 1 -d ' ' > out/file-explorer.zip.md5sum"
             }
         },
 
@@ -183,7 +180,7 @@ module.exports = function (grunt) {
         compress: {
             dist: {
                 options: {
-                    archive: "out/process-explorer.zip",
+                    archive: "out/file-explorer.zip",
                     mode: 0
                 },
                 files: [

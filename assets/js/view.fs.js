@@ -68,6 +68,9 @@ var FileSystemView = Backbone.View.extend({
         this._currentDir = newDir;
         this._files = new Files(this._currentDir);
 
+        if (this._ev)
+            this._ev.close();
+
         this._files.fetch({
             success: function () {
                 self._filesGrid = new Slick.Grid(w2ui["fs_view_layout"].el("main"),

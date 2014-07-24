@@ -16,7 +16,15 @@
 
 var fs = require("fs");
 var path = require("path");
+var eventSource = require("event-source-emitter");
 var _ = require("underscore");
+var Inotify = require("inotify").Inotify;
+
+// Current inotify instance.
+var inotify = new Inotify();
+
+// Current inotify watch descriptors.
+var inWatch = {};
 
 var _adapters = {
     jstree: function (stat) {
@@ -42,6 +50,9 @@ function stat2json(filepath, fnadapter, filest) {
     if (!filest)
         filest = fs.statSync(filepath);
 
+    if (!fnadapter)
+        fnadapter = _adapters.none;
+
     return fnadapter({
         name: filepath == "/" ? "/" : path.basename(filepath),
         path: filepath,
@@ -64,6 +75,63 @@ function stat2json(filepath, fnadapter, filest) {
     });
 }
 
+exports.event = function (req, res) {
+    var rpath;
+
+    // No "p" parameter means we dump data for the root.
+    if (!req.query.p)
+        rpath = "/";
+    else
+        rpath = req.query.p;
+
+    // Bundle the event source with the inotify context.
+    var evWrapper = {
+        path: rpath,
+
+        eventSource: eventSource(req, res, {
+            keepAlive: true,
+
+            onClose: function () {
+                if (evWrapper.watchId != -1) {
+                    console.log("Closed inotify on " + evWrapper.path);
+                    inotify.removeWatch(evWrapper.watchId);
+                }
+            }
+        }),
+
+        watchId: inotify.addWatch({
+            path: rpath,
+            watch_for: Inotify.IN_CREATE | Inotify.IN_DELETE,
+
+            callback: function (event) {
+                if (!event.name)
+                    return;
+
+                var fpath = path.join(rpath, event.name);
+
+                if (event.mask & Inotify.IN_CREATE) {
+                    try {
+                        evWrapper.eventSource.emit("create", {
+                            path: fpath,
+                            stat: stat2json(fpath)
+                        });
+                    } catch (ex) {
+                        console.log("Stat call failed: " + fpath);
+                    }
+                }
+                // We don't have the full stat for the delete event but at least
+                // pass the name entry to the interface.
+                else if (event.mask & Inotify.IN_DELETE) {
+                    evWrapper.eventSource.emit("delete", {
+                        path: fpath,
+                        stat: { name: path.basename(fpath) }
+                    });
+                }
+            }
+        })
+    };
+};
+
 exports.get = function (req, res) {
     var rpath, fnadapter, fslist = [];
 
@@ -84,6 +152,7 @@ exports.get = function (req, res) {
     }
     else
         rpath = req.query.p;
+
 
     fs.readdir(rpath, function (err, files) {
         if (err) {

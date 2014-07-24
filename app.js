@@ -15,59 +15,40 @@
  */
 
 var express = require("express");
+var exSession = require("express-session");
+var exLogger = require("morgan");
+var exStatic = require("serve-static");
 var http = require("http");
 var path = require("path");
-var socketio = require("socket.io");
+var WebSocket = require("ws").Server;
 var spawn = require("child_process").spawn;
-var fsroute = require("./routes/fs");
 
+// Express application
 var app = express();
+
+// Routes;
+var fsroute = require("./routes/fs");
 
 app.set("env", process.env.ENV || "development");
 app.set("port", process.env.PORT || 3000);
 app.set("views", path.join(__dirname, "views"));
-app.set("json spaces", 0);
-app.use(express.favicon());
-app.use(express.json());
-app.use(express.urlencoded());
-app.use(express.methodOverride());
-app.use(app.router);
-app.use(express.static(path.join(__dirname, "public")));
+
+// Middlewares.
+app.use(exSession({ secret: 'la grippe' }));
+app.use(exStatic(path.join(__dirname, "public")));
 
 // development only
-if ("development" == app.get("env")) {
-    app.use(express.logger("dev"));
-    app.use(express.errorHandler());
-}
+if ("development" == app.get("env"))
+    app.use(exLogger("combined"));
+
+var server = http.createServer(app);
 
 app.get("/", function (req, res) { res.redirect("/index.html"); });
 app.get("/apropos", function (req, res) { res.redirect("/apropos.html"); });
 app.get("/fs/:part", fsroute.get);
-
-var server = http.createServer(app);
-var ws = socketio.listen(server);
+app.get("/fsev", fsroute.event);
 
 server.listen(app.get('port'), function() {});
-
-ws.of("/logcat").on("connection", function (socket) {
-    var logcat;
-
-    // If we can't execute logcat, the socket will forever remain silent.
-
-    logcat = spawn("logcat", ["-v", "time"]).on("error", function() {
-        console.log("Could not execute logcat");
-    });
-
-    if (logcat) {
-        logcat.stdout.on("data", function (data) {
-            socket.emit("logcat", data.toString());
-        });
-
-        socket.on("disconnect", function () {
-            logcat.kill();
-        });
-    }
-});
 
 // Handle receiving the "quit" command from the UI.
 process.stdin.on("data", function (chunk) {

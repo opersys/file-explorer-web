@@ -15,7 +15,7 @@
  */
 
 var File = Backbone.Model.extend({
-    idAttribute: "ino",
+    idAttribute: "name",
 
     initialize: function () {
         this.attributes["ui-collapsed"] = true;
@@ -31,67 +31,6 @@ var File = Backbone.Model.extend({
     }
 });
 
-var DirectoryTree = Backbone.Collection.extend({
-    url: "/fs/dirs",
-    model: File,
-
-    _openDirs: {}, // Open directories by inode.
-    _rows: [],
-
-    getItem: function (n) {
-        return this._rows[n];
-    },
-
-    getLength: function () {
-        return this._rows.length;
-    },
-
-    reindex: function () {
-        var self = this;
-        var dirsToFetch = [], dirFetchCount = 0;
-
-        for (var dir in this._rows) {
-            if (dir.get("ui-collapsed") && !_.contains(self._openDirs, dir.get("path")))
-                tofetch.push(dir);
-        }
-
-        // Fetch all the directories we need to fetch.
-        for (var dirToFetch in dirsToFetch) {
-            dirToFetch.fetch({
-                success: function (dir) {
-                    dirFetchCount++;
-
-                    // All fetched?
-                    if (dirFetchCount == dirsToFetch.length) {
-                        self._rows = [];
-
-                        _.each(_.values(openDirs), function (openDir) {
-                            self._row.push();
-                        });
-                    }
-                    // Save the collection.
-                    else self._openDirs[dir.get("path")] = dir;
-                }
-            })
-        }
-    },
-
-    initialize: function (rootPath) {
-        var self = this;
-
-        self._rootPath = rootPath;
-        self._openDirs[0] = new Directory(rootPath);
-
-        self._openDirs[0].fetch({success: function () {
-            self.reindex();
-        }});
-    },
-
-    root: function () {
-        return this._rootPath;
-    }
-});
-
 var Directory = Backbone.Collection.extend({
     model: File,
 
@@ -101,6 +40,16 @@ var Directory = Backbone.Collection.extend({
 
     initialize: function (rootPath) {
         this._root = rootPath;
+
+        this._ev = new EventSource("/fsev?p=" + self._currentDir);
+
+        this._ev.addEventListener("create", function (ev) {
+            var data = JSON.parse(ev.data);
+        });
+
+        this._ev.addEventListener("delete", function (ev) {
+            var data = JSON.parse(ev.data);
+        });
     },
 
     root: function () {
@@ -124,7 +73,26 @@ var Files = Backbone.Collection.extend({
     },
 
     initialize: function (rootPath) {
+        var self = this;
+
         this._rootPath = rootPath;
+        this._ev = new EventSource("/fsev?p=" + this._rootPath);
+
+        this._ev.addEventListener("create", function (ev) {
+            var data = JSON.parse(ev.data);
+
+            console.log("Created: " + data.path);
+
+            self.add(data.stat);
+        });
+
+        this._ev.addEventListener("delete", function (ev) {
+            var data = JSON.parse(ev.data);
+
+            console.log("Deleted: " + data.path);
+
+            self.remove(data.stat.name);
+        });
     },
 
     root: function () {

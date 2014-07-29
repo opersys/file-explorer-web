@@ -16,6 +16,8 @@
 
 var FileSystemView = Backbone.View.extend({
 
+    _jstree: null,
+
     _nameFormatter: function (row, cell, value, columnDef, file) {
         var nb = file.get("path").split("/").length;
 
@@ -36,17 +38,38 @@ var FileSystemView = Backbone.View.extend({
                     .attr("class", "toggle collapse"))[0].outerHTML + file.get("name");
     },
 
+    getAvailableColumns: function () {
+        return _.keys(this._availableColumns);
+    },
+
+    getColumnName: function (colId) {
+        return this._availableColumns[colId].name;
+    },
+
+    setColumns: function (columnsIds) {
+        var self = this;
+        var cols = _.map(columnsIds, function (colId) {
+            return self._availableColumns[colId];
+        });
+        this._columns = cols;
+        this._filesGrid.setColumns(cols);
+        this._filesGrid.render();
+    },
+
     _sizeFormatter: function (row, cell, value, columnDef, file) {
         return Humanize.filesizeformat(file.get(columnDef.field));
     },
 
-    _filesColumns: [
-        { id: "icon", name: "", field: "icon" },
-        { id: "name", name: "Name", field: "name" },
-        { id: "uid", name: "UID", field: "uid" },
-        { id: "gid", name: "GID", field: "gid" },
-        { id: "size", name: "Size", field: "size" }
-    ],
+    _availableColumns: {
+        "icon": { id: "icon", name: "", field: "icon", sortable: true },
+        "name": { id: "name", name: "Name", field: "name", sortable: true },
+        "uid": { id: "uid", name: "UID", field: "uid", sortable: true },
+        "gid": { id: "gid", name: "GID", field: "gid", sortable: true },
+        "size": { id: "size", name: "Size", field: "size", sortable: true }
+    },
+
+    // This is the actual list of columns passed to SlickGrid.
+    _columns: [],
 
     _filesOptions: {
         formatterFactory:{
@@ -57,7 +80,7 @@ var FileSystemView = Backbone.View.extend({
             }
         },
 
-        enableColumnReorder: false,
+        enableColumnReorder: true,
         enableCellNavigation: true,
         forceFitColumns: true
     },
@@ -74,9 +97,9 @@ var FileSystemView = Backbone.View.extend({
         this._files.fetch({
             success: function () {
                 self._filesGrid = new Slick.Grid(w2ui["fs_view_layout"].el("main"),
-                    self._files, self._filesColumns, self._filesOptions);
+                    self._files, self._columns, self._filesOptions);
 
-                self._filesColumns[self._filesGrid.getColumnIndex("size")].formatter = function () {
+                self._columns[self._filesGrid.getColumnIndex("size")].formatter = function () {
                     return self._sizeFormatter.apply(self, arguments);
                 };
 
@@ -129,7 +152,13 @@ var FileSystemView = Backbone.View.extend({
                     type: "main",
                     resizer: 5,
                     resizable: true
-                }]
+                }
+            ]
+        });
+
+        self._options.getOption("columns").on("change", function () {
+            var newCols = self._options.getOptionValue("columns");
+            self.setColumns(newCols);
         });
 
         self.render();
@@ -155,6 +184,9 @@ var FileSystemView = Backbone.View.extend({
                     }
                 }
             },
+            "ui": {
+                "initially_select" : [ "/" ]
+            },
             "plugins" : []
         });
 
@@ -163,7 +195,7 @@ var FileSystemView = Backbone.View.extend({
         });
 
         self._filesGrid = new Slick.Grid(w2ui["fs_view_layout"].el("main"),
-            self._files, self._filesColumns, self._filesOptions);
+            self._files, self._columns, self._filesOptions);
 
         var rootPath = new Directory();
         rootPath.set({
@@ -172,7 +204,6 @@ var FileSystemView = Backbone.View.extend({
         });
 
         self._filesGrid.resizeCanvas();
-
         self._filesGrid.render();
     }
 });

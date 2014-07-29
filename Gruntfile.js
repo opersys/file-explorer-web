@@ -83,7 +83,7 @@ module.exports = function (grunt) {
                 src: [
                     "assets/css/slick.grid.css",
                     "assets/css/slick-default-theme.css",
-                    "assets/css/w2ui-1.3.1.min.css",
+                    "assets/css/w2ui-1.4.min.css",
                     "assets/css/style.css",
                     "assets/css/style-jstree.css"
                 ],
@@ -101,8 +101,9 @@ module.exports = function (grunt) {
                     "assets/jslib/humanize.min.js",
                     "assets/jslib/moment.min.js",
                     "assets/jslib/smoothie.js",
-                    "assets/jslib/w2ui-1.3.1.min.js",
+                    "assets/jslib/w2ui-1.4.min.js",
                     "assets/jslib/jstree.min.js",
+                    "assets/jslib/jquery-ui.min.js",
                     "assets/jslib/slickgrid/slick.core.js",
                     "assets/jslib/slickgrid/slick.grid.js",
                     "assets/jslib/slickgrid/slick.formatters.js",
@@ -121,13 +122,14 @@ module.exports = function (grunt) {
                     "assets/js/model.options.js",
                     "assets/js/model.fs.js",
                     "assets/js/view.fs.js",
+                    "assets/js/view.main.js",
                     "assets/js/fs.js"
                 ],
                 dest: "dist/public/js/<%= pkg.name %>_main.js"
             }
         },
 
-        uglify: {
+        /*uglify: {
             dist: {
                 options: {
                     sourceMap: true
@@ -144,7 +146,7 @@ module.exports = function (grunt) {
                 src: "<%= concat.dist_css.dest %>",
                 dest: "<%= concat.dist_css.dest %>"
             }
-        },
+        },*/
 
         exec: {
             npm_install: {
@@ -201,7 +203,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-pack");
     grunt.loadNpmTasks("grunt-chmod");
 
-    grunt.registerTask("default", ["mkdir", "copyto", "concat", "uglify", "cssmin", "jade", "exec:npm_install"]);
+    grunt.registerTask("default", ["mkdir", "copyto", "concat", /*"uglify", "cssmin",*/ "jade", "exec:npm_install"]);
     grunt.registerTask("pack", ["default", "chmod", "compress", "exec:md5sum"]);
 }
 

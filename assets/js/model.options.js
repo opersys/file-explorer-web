@@ -17,7 +17,7 @@
 var OptionItem = Backbone.Model.extend({ });
 
 var Options = Backbone.Collection.extend({
-    localStorage: new Backbone.LocalStorage("Options"),
+    localStorage: new Backbone.LocalStorage("FileExplorer-Options"),
     model: OptionItem,
 
     // Initialize the option

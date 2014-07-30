@@ -65,7 +65,9 @@ var FileSystemView = Backbone.View.extend({
         "groupname": { id: "groupname", name: "Group", field: "groupname", sortable: true },
         "uid": { id: "uid", name: "UID", field: "uid", sortable: true, minWidth: 30, maxWidth: 50 },
         "gid": { id: "gid", name: "GID", field: "gid", sortable: true, minWidth: 30, maxWidth: 50  },
-        "size": { id: "size", name: "Size", field: "size", sortable: true, minWidth: 30 }
+        "size": { id: "size", name: "Size", field: "size", sortable: true, minWidth: 30 },
+        "modestr": { id: "mode", name: "Mode", field: "modestr", sortable: false },
+        "nmode": { id: "nmode", name: "Numeric mode", field: "mode", sortable: false }
     },
 
     // This is the actual list of columns passed to SlickGrid.

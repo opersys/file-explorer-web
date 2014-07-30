@@ -47,6 +47,36 @@ var _adapters = {
     }
 };
 
+function mode2str(mode) {
+    var s = "";
+
+    s += (mode & 0400) ? 'r' : '-';
+
+    if (mode & 04000)
+        s += (mode & 0100) ? 's' : 'S';
+    else
+        s += (mode & 0100) ? 'x' : '-';
+
+    s += (mode & 0200) ? 'w' : '-';
+
+    if (mode & 02000)
+        s += (mode & 010) ? 's' : 'S';
+    else
+        s += (mode & 010) ? 'x' : '-';
+
+    s += (mode & 040) ? 'r' : '-';
+    s += (mode & 020) ? 'w' : '-';
+    s += (mode & 04) ? 'r' : '-';
+    s += (mode & 02) ? 'w' : '-';
+
+    if (mode & 01000)
+        s += (mode & 01) ? 't' : 'T';
+    else
+        s += (mode & 01) ? 'x' : '-';
+
+    return s;
+}
+
 function stat2json(filepath, fnadapter, filest) {
     var upwd, gpwd;
 
@@ -72,6 +102,8 @@ function stat2json(filepath, fnadapter, filest) {
         atime: filest.atime,
         mtime: filest.mtime,
         ctime: filest.ctime,
+        mode: filest.mode,
+        modestr: mode2str(filest.mode),
         username: upwd.name,
         groupname: gpwd.name,
         isFile: filest.isFile(),

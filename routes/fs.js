@@ -15,6 +15,7 @@
  */
 
 var fs = require("fs");
+var posix = require("posix");
 var path = require("path");
 var eventSource = require("event-source-emitter");
 var _ = require("underscore");
@@ -47,11 +48,16 @@ var _adapters = {
 };
 
 function stat2json(filepath, fnadapter, filest) {
+    var upwd, gpwd;
+
     if (!filest)
         filest = fs.statSync(filepath);
 
     if (!fnadapter)
         fnadapter = _adapters.none;
+
+    upwd = posix.getpwnam(filest.uid);
+    gpwd = posix.getgrnam(filest.gid);
 
     return fnadapter({
         name: filepath == "/" ? "/" : path.basename(filepath),
@@ -66,6 +72,8 @@ function stat2json(filepath, fnadapter, filest) {
         atime: filest.atime,
         mtime: filest.mtime,
         ctime: filest.ctime,
+        username: upwd.name,
+        groupname: gpwd.name,
         isFile: filest.isFile(),
         isDir: filest.isDirectory(),
         isBlockDev: filest.isBlockDevice(),

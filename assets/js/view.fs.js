@@ -61,6 +61,8 @@ var FileSystemView = Backbone.View.extend({
     _availableColumns: {
         "icon": { id: "icon", name: "", field: "icon", sortable: true, minWidth: 30, maxWidth: 50 },
         "name": { id: "name", name: "Name", field: "name", sortable: true },
+        "username": { id: "username", name: "User", field: "username", sortable: true },
+        "groupname": { id: "groupname", name: "Group", field: "groupname", sortable: true },
         "uid": { id: "uid", name: "UID", field: "uid", sortable: true, minWidth: 30, maxWidth: 50 },
         "gid": { id: "gid", name: "GID", field: "gid", sortable: true, minWidth: 30, maxWidth: 50  },
         "size": { id: "size", name: "Size", field: "size", sortable: true, minWidth: 30 }

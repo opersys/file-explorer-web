@@ -59,11 +59,11 @@ var FileSystemView = Backbone.View.extend({
     },
 
     _availableColumns: {
-        "icon": { id: "icon", name: "", field: "icon", sortable: true },
+        "icon": { id: "icon", name: "", field: "icon", sortable: true, minWidth: 30, maxWidth: 50 },
         "name": { id: "name", name: "Name", field: "name", sortable: true },
-        "uid": { id: "uid", name: "UID", field: "uid", sortable: true },
-        "gid": { id: "gid", name: "GID", field: "gid", sortable: true },
-        "size": { id: "size", name: "Size", field: "size", sortable: true }
+        "uid": { id: "uid", name: "UID", field: "uid", sortable: true, minWidth: 30, maxWidth: 50 },
+        "gid": { id: "gid", name: "GID", field: "gid", sortable: true, minWidth: 30, maxWidth: 50  },
+        "size": { id: "size", name: "Size", field: "size", sortable: true, minWidth: 30 }
     },
 
     // This is the actual list of columns passed to SlickGrid.
@@ -96,6 +96,15 @@ var FileSystemView = Backbone.View.extend({
             success: function () {
                 self._filesGrid = new Slick.Grid(w2ui["fs_view_layout"].el("main"),
                     self._files, self._columns, self._filesOptions);
+
+                self._filesGrid.onColumnsReordered.subscribe(function (e, args) {
+                    var cols  = self._filesGrid.getColumns();
+                    var colIds = _.map(cols, function (colData) {
+                        return colData.id;
+                    });
+
+                    self._options.setOptionValue("columns", colIds);
+                });
 
                 self._columns[self._filesGrid.getColumnIndex("size")].formatter = function () {
                     return self._sizeFormatter.apply(self, arguments);

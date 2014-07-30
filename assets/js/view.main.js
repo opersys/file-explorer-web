@@ -91,7 +91,13 @@ var MainView = Backbone.View.extend({
                         ]
                     }
                 }
-            ]
+            ],
+            onResize: function (ev) {
+                ev.onComplete = function () {
+                    if (self.filesystemView)
+                        self.filesystemView.resize();
+                };
+            }
         });
 
         this.filesystemView = new FileSystemView({

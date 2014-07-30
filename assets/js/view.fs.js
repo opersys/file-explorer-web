@@ -16,8 +16,6 @@
 
 var FileSystemView = Backbone.View.extend({
 
-    _jstree: null,
-
     _nameFormatter: function (row, cell, value, columnDef, file) {
         var nb = file.get("path").split("/").length;
 
@@ -164,11 +162,13 @@ var FileSystemView = Backbone.View.extend({
         self.render();
     },
 
-    autoResize: function () {
+    resize: function () {
+        w2ui["fs_view_layout"].resize();
     },
 
     render: function () {
         var self = this;
+        var rootPath;
 
         $(w2ui["fs_view_layout"].el("left")).jstree({
             "core" : {
@@ -197,13 +197,12 @@ var FileSystemView = Backbone.View.extend({
         self._filesGrid = new Slick.Grid(w2ui["fs_view_layout"].el("main"),
             self._files, self._columns, self._filesOptions);
 
-        var rootPath = new Directory();
+        rootPath = new Directory();
         rootPath.set({
             "ui-collapsed": false,
             "path": "/"
         });
 
-        self._filesGrid.resizeCanvas();
         self._filesGrid.render();
     }
 });

@@ -18,7 +18,7 @@ var mainView,
     options = new Options();
 
 var resizeWindow = function () {
-    $("#fs_layout")
+    $("#mainLayout")
         .width($(window).width())
         .height($(window).height());
 

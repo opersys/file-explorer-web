@@ -91,12 +91,19 @@ var FileSystemView = Backbone.View.extend({
         var self = this;
 
         this._currentDir = newDir;
-        this._files = new Files(this._currentDir);
 
-        if (this._ev)
-            this._ev.close();
+        // Most close the collection to free the event source.
+        if (this._files)
+            this._files.close();
+
+        this._files = new Files({
+            rootPath: this._currentDir,
+            showHidden: self._options.getOptionValue("showHidden")
+        });
 
         this._files.fetch({
+            reset: true,
+
             success: function () {
                 self._filesGrid = new Slick.Grid(w2ui["fs_view_layout"].el("main"),
                     self._files, self._columns, self._filesOptions);
@@ -133,6 +140,10 @@ var FileSystemView = Backbone.View.extend({
 
                     self._filesGrid.render();
                 });
+            },
+
+            error: function () {
+                console.log("Failed to fetch.");
             }
         });
 
@@ -170,6 +181,10 @@ var FileSystemView = Backbone.View.extend({
         self._options.getOption("columns").on("change", function () {
             var newCols = self._options.getOptionValue("columns");
             self.setColumns(newCols);
+        });
+
+        self._options.getOption("showHidden").on("change", function () {
+            self.updateCurrentDir(self._currentDir);
         });
 
         self.render();

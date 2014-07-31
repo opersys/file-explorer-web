@@ -30,6 +30,7 @@ $(document).ready(function () {
 
     options.fetch();
     options.initOption("columns", ["name", "uid", "gid", "size"]);
+    options.initOption("showHidden", false);
 
     mainView = new MainView({
         el: $("#mainLayout"),

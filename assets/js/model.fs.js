@@ -72,11 +72,18 @@ var Files = Backbone.Collection.extend({
         return this.length;
     },
 
-    initialize: function (rootPath) {
+    // This object must be closed since it opens an event source which are
+    // in limited quantity.
+    close: function () {
+        if (this._ev) this._ev.close();
+    },
+
+    initialize: function (options) {
         var self = this;
 
-        this._rootPath = rootPath;
+        this._rootPath = options.rootPath;
         this._ev = new EventSource("/fsev?p=" + this._rootPath);
+        this._showHidden = options.showHidden;
 
         this._ev.addEventListener("create", function (ev) {
             var data = JSON.parse(ev.data);
@@ -93,6 +100,20 @@ var Files = Backbone.Collection.extend({
 
             self.remove(data.stat.name);
         });
+    },
+
+    parse: function (response) {
+        var self = this;
+        var newResponse = [];
+
+        if (!self._showHidden) {
+            _.each(response, function (respItem) {
+                if (respItem.name.charAt(0) != ".")
+                    newResponse.push(respItem);
+            });
+            return newResponse;
+        } else
+            return response;
     },
 
     root: function () {

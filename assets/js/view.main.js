@@ -17,6 +17,7 @@
 var MainView = Backbone.View.extend({
 
     columnOverlayId: null,
+    optionOverlayId: null,
     filesystemView: null,
 
     onColumnCheckClick: function (colId, checked) {
@@ -28,9 +29,34 @@ var MainView = Backbone.View.extend({
             this._options.setOptionValue("columns", _.without(curVal, colId));
     },
 
+    showOptionsOverlay: function () {
+        var self = this;
+        var ul, optHiddenLi, overlayDiv;
+
+        overlayDiv = $("#" + this.optionOverlayId);
+        overlayDiv.css("margin", "1em");
+
+        ul = $("<ul></ul>");
+        optHiddenLi = $("<li></li>")
+            .append(
+                $("<input></input>")
+                    .attr("type", "checkbox")
+                    .attr("name", "optShowHidden")
+                    .attr("checked", self._options.getOptionValue("showHidden"))
+                    .on("change", function () {
+                        self._options.setOptionValue("showHidden", $(this).prop("checked"));
+                    }))
+            .append(
+                $("<label></label>")
+                    .attr("for", "optShowHidden")
+                    .text("Show hidden files"));
+
+        overlayDiv.append(optHiddenLi);
+    },
+
     // Display the overlay allowing the selection of the columns that will be
     // displayed in the file manager.
-    showColumnOverlay: function () {
+    showColumnsOverlay: function () {
         var curVal = this._options.getOptionValue("columns");
         var self = this;
         var overlayEl = $("#" + this.columnOverlayId);
@@ -85,7 +111,13 @@ var MainView = Backbone.View.extend({
                             { type: "drop", id: "btnColumns", caption: "Columns",
                                 html: "<div id='" + self.columnOverlayId + "'></div>",
                                 overlay: {
-                                    onShow: function () { self.showColumnOverlay(); }
+                                    onShow: function () { self.showColumnsOverlay(); }
+                                }
+                            },
+                            { type: "drop", id: "btnOptions", caption: "Options",
+                                html: "<div id='" + self.optionOverlayId + "'></div>",
+                                overlay: {
+                                    onShow: function () { self.showOptionsOverlay(); }
                                 }
                             }
                         ]

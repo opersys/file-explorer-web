@@ -16,12 +16,59 @@
 
 var FileSystemView = Backbone.View.extend({
 
+    _availableColumns: {
+        "icon": {
+            optionName: "Icon", id: "icon", name: "&nbsp;", field: "icon",
+            sortable: true, minWidth: 25, maxWidth: 25
+        },
+        "name": {
+            optionName: "File name", id: "name", name: "Name", field: "name",
+            sortable: true
+        },
+        "username": {
+            optionName: "Owner username", id: "username", name: "User", field: "username",
+            sortable: true
+        },
+        "groupname": {
+            optionName: "Owner groupname", id: "groupname", name: "Group", field: "groupname",
+            sortable: true
+        },
+        "uid": {
+            optionName: "Owner user ID", id: "uid", name: "UID", field: "uid",
+            sortable: true, minWidth: 30, maxWidth: 50
+        },
+        "gid": {
+            optionName: "Owner group ID", id: "gid", name: "GID", field: "gid",
+            sortable: true, minWidth: 30, maxWidth: 50
+        },
+        "size": {
+            optionName: "File size", id: "size", name: "Size", field: "size",
+            sortable: true, minWidth: 30
+        },
+        "modestr": {
+            optionName: "File modes", id: "mode", name: "Mode", field: "modestr",
+            sortable: false
+        },
+        "nmode": {
+            optionName: "File mode number", id: "nmode", name: "Numeric mode", field: "mode",
+            sortable: false
+        }
+    },
+
+    _sizeFormatter: function (row, cell, value, columnDef, file) {
+        return Humanize.filesizeformat(file.get(columnDef.field));
+    },
+
+    _iconFormatter: function (row, cell, value, columnDef, file) {
+        return "<img src='" + file.get("icon") + "' />";
+    },
+
     getAvailableColumns: function () {
         return _.keys(this._availableColumns);
     },
 
     getColumnName: function (colId) {
-        return this._availableColumns[colId].name;
+        return this._availableColumns[colId].optionName;
     },
 
     setColumns: function (columnsIds) {
@@ -32,22 +79,6 @@ var FileSystemView = Backbone.View.extend({
         this._columns = cols;
         this._filesGrid.setColumns(cols);
         this._filesGrid.render();
-    },
-
-    _sizeFormatter: function (row, cell, value, columnDef, file) {
-        return Humanize.filesizeformat(file.get(columnDef.field));
-    },
-
-    _availableColumns: {
-        "icon": { id: "icon", name: "", field: "icon", sortable: true, minWidth: 30, maxWidth: 50 },
-        "name": { id: "name", name: "Name", field: "name", sortable: true },
-        "username": { id: "username", name: "User", field: "username", sortable: true },
-        "groupname": { id: "groupname", name: "Group", field: "groupname", sortable: true },
-        "uid": { id: "uid", name: "UID", field: "uid", sortable: true, minWidth: 30, maxWidth: 50 },
-        "gid": { id: "gid", name: "GID", field: "gid", sortable: true, minWidth: 30, maxWidth: 50  },
-        "size": { id: "size", name: "Size", field: "size", sortable: true, minWidth: 30 },
-        "modestr": { id: "mode", name: "Mode", field: "modestr", sortable: false },
-        "nmode": { id: "nmode", name: "Numeric mode", field: "mode", sortable: false }
     },
 
     // This is the actual list of columns passed to SlickGrid.
@@ -84,6 +115,10 @@ var FileSystemView = Backbone.View.extend({
 
         self._columns[self._filesGrid.getColumnIndex("size")].formatter = function () {
             return self._sizeFormatter.apply(self, arguments);
+        };
+
+        self._columns[self._filesGrid.getColumnIndex("icon")].formatter = function () {
+            return self._iconFormatter.apply(self, arguments);
         };
 
         self._files.on("add", function () {

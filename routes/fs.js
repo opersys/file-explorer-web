@@ -77,6 +77,21 @@ function mode2str(mode) {
     return s;
 }
 
+function ext2icon(filepath) {
+    var ext = path.extname(filepath).substring(1).toLowerCase();
+    var icon = path.join("icons", ext + ".png");
+
+    // Handle folders.
+    if (fs.statSync(filepath).isDirectory())
+        return path.join("icons", "_folder.png");
+
+    if (ext != "" && fs.existsSync(path.join("public", icon)))
+        return icon;
+    else
+        // Default icon
+        return path.join("icons", "_blank.png");
+}
+
 function stat2json(filepath, fnadapter, filest) {
     var upwd, gpwd;
 
@@ -91,6 +106,7 @@ function stat2json(filepath, fnadapter, filest) {
 
     return fnadapter({
         name: filepath == "/" ? "/" : path.basename(filepath),
+        icon: ext2icon(filepath),
         path: filepath,
         ino: filest.ino,
         uid: filest.uid,

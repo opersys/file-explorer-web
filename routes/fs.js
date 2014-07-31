@@ -173,7 +173,7 @@ exports.event = function (req, res) {
 };
 
 exports.get = function (req, res) {
-    var rpath, fnadapter, fslist = [];
+    var rpath, showHidden, fnadapter, fslist = [];
 
     // Handle data adapters.
     fnadapter = _adapters.none;
@@ -190,9 +190,10 @@ exports.get = function (req, res) {
         res.json([stat2json("/", fnadapter)]);
         return;
     }
-    else
-        rpath = req.query.p;
+    else rpath = req.query.p;
 
+    // No 'h' parameter means we just show all.
+    showHidden = !(req.query.h && req.query.h == "0");
 
     fs.readdir(rpath, function (err, files) {
         if (err) {
@@ -205,6 +206,9 @@ exports.get = function (req, res) {
         _.each(files, function (file) {
             var filepath = path.join(rpath, file);
             var filest = fs.statSync(filepath);
+
+            if (!showHidden && file.charAt(0) == ".")
+                return;
 
             if ((req.params.part == "files") || (req.params.part == "dirs" && filest.isDirectory()))
                 fslist.push(stat2json(filepath, fnadapter, filest))

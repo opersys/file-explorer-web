@@ -87,6 +87,50 @@ var FileSystemView = Backbone.View.extend({
         forceFitColumns: true
     },
 
+    onDirectoryFetched: function () {
+        var self = this;
+
+        self._filesGrid = new Slick.Grid(w2ui["fs_view_layout"].el("main"),
+            self._files, self._columns, self._filesOptions);
+
+        self._filesGrid.onColumnsReordered.subscribe(function (e, args) {
+            var cols  = self._filesGrid.getColumns();
+            var colIds = _.map(cols, function (colData) {
+                return colData.id;
+            });
+
+            self._options.setOptionValue("columns", colIds);
+        });
+
+        self._columns[self._filesGrid.getColumnIndex("size")].formatter = function () {
+            return self._sizeFormatter.apply(self, arguments);
+        };
+
+        self._files.on("add", function () {
+            self._filesGrid.invalidate();
+            self._filesGrid.updateRowCount();
+
+            // Immediately resize the canvas.
+            self._filesGrid.resizeCanvas();
+
+            self._filesGrid.render();
+        });
+
+        self._files.on("remove", function () {
+            self._filesGrid.invalidate();
+            self._filesGrid.updateRowCount();
+
+            // Immediately resize the canvas.
+            self._filesGrid.resizeCanvas();
+
+            self._filesGrid.render();
+        });
+    },
+
+    onDirectoryFetchError: function () {
+        console.log("Failed to fetch.");
+    },
+
     updateCurrentDir: function (newDir) {
         var self = this;
 
@@ -103,48 +147,8 @@ var FileSystemView = Backbone.View.extend({
 
         this._files.fetch({
             reset: true,
-
-            success: function () {
-                self._filesGrid = new Slick.Grid(w2ui["fs_view_layout"].el("main"),
-                    self._files, self._columns, self._filesOptions);
-
-                self._filesGrid.onColumnsReordered.subscribe(function (e, args) {
-                    var cols  = self._filesGrid.getColumns();
-                    var colIds = _.map(cols, function (colData) {
-                        return colData.id;
-                    });
-
-                    self._options.setOptionValue("columns", colIds);
-                });
-
-                self._columns[self._filesGrid.getColumnIndex("size")].formatter = function () {
-                    return self._sizeFormatter.apply(self, arguments);
-                };
-
-                self._files.on("add", function () {
-                    self._filesGrid.invalidate();
-                    self._filesGrid.updateRowCount();
-
-                    // Immediately resize the canvas.
-                    self._filesGrid.resizeCanvas();
-
-                    self._filesGrid.render();
-                });
-
-                self._files.on("remove", function () {
-                    self._filesGrid.invalidate();
-                    self._filesGrid.updateRowCount();
-
-                    // Immediately resize the canvas.
-                    self._filesGrid.resizeCanvas();
-
-                    self._filesGrid.render();
-                });
-            },
-
-            error: function () {
-                console.log("Failed to fetch.");
-            }
+            success: function () { self.onDirectoryFetched.apply(self); },
+            error: function () { self.onDirectoryFetchError.apply(self); }
         });
 
         self._files.fetch();
@@ -185,6 +189,8 @@ var FileSystemView = Backbone.View.extend({
 
         self._options.getOption("showHidden").on("change", function () {
             self.updateCurrentDir(self._currentDir);
+
+            $(w2ui["fs_view_layout"].el("left")).jstree("refresh");
         });
 
         self.render();
@@ -202,10 +208,12 @@ var FileSystemView = Backbone.View.extend({
             "core" : {
                 'data' : {
                     'url' : function (node) {
+                        var showHidden = self._options.getOptionValue("showHidden") ? 1 : 0;
+
                         if (node.id == "#")
                             return "/fs/dirs?a=jstree";
                         else
-                            return "/fs/dirs?a=jstree&p=" + node.data.path
+                            return "/fs/dirs?h=" + showHidden + "&a=jstree&p=" + node.data.path
                     },
                     'data' : function (node) {
                         return { 'id' : node.id };
@@ -215,7 +223,7 @@ var FileSystemView = Backbone.View.extend({
             "ui": {
                 "initially_select" : [ "/" ]
             },
-            "plugins" : []
+            "plugins" : [ "search" ]
         });
 
         $(w2ui["fs_view_layout"].el("left")).on("activate_node.jstree", function (ev, obj) {

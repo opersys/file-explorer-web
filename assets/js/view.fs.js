@@ -16,26 +16,6 @@
 
 var FileSystemView = Backbone.View.extend({
 
-    _nameFormatter: function (row, cell, value, columnDef, file) {
-        var nb = file.get("path").split("/").length;
-
-        var spacer = $("<span></span>")
-            .css("display", "inline-block")
-            .css("height", "1px")
-            .css("width", (15 * nb) + "px");
-
-        if (file.get("ui-collapsed"))
-            return spacer.append(
-                $("<span></span>")
-                    .attr("onclick", "FileSystemView_expandPath(" + file.get("ino") + ")")
-                    .attr("class", "toggle expand"))[0].outerHTML + file.get("name");
-        else
-            return spacer.append(
-                $("<span></span>")
-                    .attr("onclick", "FileSystemView_expandPath(" + file.get("ino") + ")")
-                    .attr("class", "toggle collapse"))[0].outerHTML + file.get("name");
-    },
-
     getAvailableColumns: function () {
         return _.keys(this._availableColumns);
     },

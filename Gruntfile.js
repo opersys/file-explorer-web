@@ -121,6 +121,8 @@ module.exports = function (grunt) {
                 src: [
                     "assets/js/model.options.js",
                     "assets/js/model.fs.js",
+                    "assets/js/view.dirtree.js",
+                    "assets/js/view.files.js",
                     "assets/js/view.fs.js",
                     "assets/js/view.main.js",
                     "assets/js/fs.js"

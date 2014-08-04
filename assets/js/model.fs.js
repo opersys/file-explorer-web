@@ -72,6 +72,22 @@ var Files = Backbone.Collection.extend({
         return this.length;
     },
 
+    comparator: function (m1, m2) {
+        var r;
+
+        if (m1.get(this._sortField) < m2.get(this._sortField))
+            r = -1;
+        else if (m2.get(this._sortField) < m1.get(this._sortField))
+            r = 1;
+        else
+            r = 0;
+
+        if (this._sortDesc)
+            r = -r;
+
+        return r;
+    },
+
     // This object must be closed since it opens an event source which are
     // in limited quantity.
     close: function () {
@@ -84,6 +100,11 @@ var Files = Backbone.Collection.extend({
         this._rootPath = options.rootPath;
         this._ev = new EventSource("/fsev?p=" + this._rootPath);
         this._showHidden = options.showHidden;
+
+        if (options.hasOwnProperty("sortField"))
+            this._sortField = options.sortField;
+        if (options.hasOwnProperty("sortDesc"))
+            this._sortDesc = options.sortDesc;
 
         this._ev.addEventListener("create", function (ev) {
             var data = JSON.parse(ev.data);

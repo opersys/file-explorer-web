@@ -66,7 +66,7 @@ var MainView = Backbone.View.extend({
         overlayDiv.css("margin", "1em");
         overlayDiv.append(overlayUl);
 
-        _.each(self.filesystemView.getAvailableColumns(), function (colId) {
+        _.each(FilesView.getAvailableColumns(), function (colId) {
             var li, chk, lbl, checked;
 
             checked = _.contains(curVal, colId);
@@ -77,7 +77,7 @@ var MainView = Backbone.View.extend({
                 .attr("name", colId);
             lbl = $("<label></label>")
                 .attr("for", colId)
-                .text(self.filesystemView.getColumnName(colId));
+                .text(FilesView.getColumnName(colId));
 
             if (checked)
                 chk.attr("checked", "checked");

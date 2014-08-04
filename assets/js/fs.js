@@ -31,6 +31,9 @@ $(document).ready(function () {
     options.fetch();
     options.initOption("columns", ["name", "uid", "gid", "size"]);
     options.initOption("showHidden", false);
+    options.initOption("sortField", "name");
+    options.initOption("sortDesc", true);
+    options.initOption("directory", true);
 
     mainView = new MainView({
         el: $("#mainLayout"),

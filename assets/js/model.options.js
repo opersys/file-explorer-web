@@ -58,9 +58,9 @@ var Options = Backbone.Collection.extend({
         }
     },
 
-    activate: function (opt) {
+    activate: function () {
         this.forEach(function (opt) {
-            opt.trigger("change");
+            opt.trigger("change", opt);
         });
     }
 });

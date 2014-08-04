@@ -23,8 +23,8 @@ var DirTreeView = Backbone.View.extend({
 
         self.$el.jstree({
             "core" : {
-                'data' : {
-                    'url' : function (node) {
+                "data" : {
+                    "url" : function (node) {
                         var showHidden = self._options.getOptionValue("showHidden") ? 1 : 0;
 
                         if (node.id == "#")
@@ -32,15 +32,20 @@ var DirTreeView = Backbone.View.extend({
                         else
                             return "/fs/dirs?h=" + showHidden + "&a=jstree&p=" + node.data.path
                     },
-                    'data' : function (node) {
-                        return { 'id' : node.id };
+                    "data" : function (node) {
+                        return { "id" : node.id };
                     }
+                }
+            },
+            "types": {
+                "no-access": {
+                    "icon": "/icons/_noaccess.png"
                 }
             },
             "ui": {
                 "initially_select" : [ "/" ]
             },
-            "plugins" : [ "search" ]
+            "plugins" : [ "search", "types" ]
 
         }).on("activate_node.jstree",
             function (ev, obj) {

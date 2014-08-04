@@ -16,6 +16,7 @@
 
 var fs = require("fs");
 var posix = require("posix");
+var access = require("unix-access");
 var path = require("path");
 var eventSource = require("event-source-emitter");
 var _ = require("underscore");
@@ -29,6 +30,11 @@ var inWatch = {};
 
 var _adapters = {
     jstree: function (stat) {
+        var ntype = "default";
+
+        if (!stat.canRead)
+            ntype = "no-access";
+
         return {
             id: "",
             text: stat.name,
@@ -38,7 +44,8 @@ var _adapters = {
                 selected: false
             },
             children: (stat.isDir ? true : []),
-            data: stat
+            data: stat,
+            type: ntype
         }
     },
 
@@ -127,7 +134,9 @@ function stat2json(filepath, fnadapter, filest) {
         isBlockDev: filest.isBlockDevice(),
         isCharDev: filest.isCharacterDevice(),
         isFIFO: filest.isFIFO(),
-        isSocket: filest.isSocket()
+        isSocket: filest.isSocket(),
+        canRead: access.sync(filepath, "r"),
+        canEnter: access.sync(filepath, "x")
     });
 }
 

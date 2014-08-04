@@ -13,7 +13,8 @@
         "morgan": "*",
         "underscore": "*",
         "ws": "*",
-        "inotify": "*"
+        "inotify": "*",
+        "unix-access": "*"
     },
     "devDependencies": {
         "jade": "*",

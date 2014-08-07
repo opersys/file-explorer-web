@@ -47,6 +47,8 @@ var FilesView = Backbone.View.extend({
             self._filesGrid = new Slick.Grid(w2ui["fs_view_layout"].el("main"),
                 self._files, self._columns, self._filesOptions);
 
+            self._filesGrid.setSelectionModel(new Slick.RowSelectionModel());
+
             self._filesGrid.onColumnsReordered.subscribe(function (e, args) {
                 var cols = self._filesGrid.getColumns();
                 var colIds = _.map(cols, function (colData) {
@@ -87,6 +89,12 @@ var FilesView = Backbone.View.extend({
 
             if (!self._filesGrid)
                 self._initializeGrid();
+
+            if (self._files.getErrors().length > 0) {
+                self._files.getErrors().each(function (m) {
+                    self.trigger("filesview:onfileserror", m);
+                });
+            }
 
             self._filesGrid.setData(self._files);
             self._filesGrid.render();

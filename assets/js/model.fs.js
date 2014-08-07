@@ -72,6 +72,10 @@ var Files = Backbone.Collection.extend({
         return this.length;
     },
 
+    getErrors: function () {
+        return this._errors;
+    },
+
     comparator: function (m1, m2) {
         var r;
 
@@ -127,14 +131,22 @@ var Files = Backbone.Collection.extend({
         var self = this;
         var newResponse = [];
 
-        if (!self._showHidden) {
-            _.each(response, function (respItem) {
+        this._errors = new Backbone.Collection();
+
+        _.each(response, function (respItem) {
+            // Handle hidden files for the JStree layout.
+            if (!self._showHidden) {
                 if (respItem.name.charAt(0) != ".")
                     newResponse.push(respItem);
-            });
-            return newResponse;
-        } else
-            return response;
+            }
+            else newResponse.push(respItem);
+
+            // Handle errors
+            if (respItem.error)
+                self._errors.add(new Backbone.Model(respItem));
+        });
+
+        return newResponse;
     },
 
     root: function () {

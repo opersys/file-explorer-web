@@ -30,12 +30,11 @@ var inWatch = {};
 
 var _adapters = {
     jstree: function (stat) {
-        var ntype = "default";
+        var r, isBad;
 
-        if (!stat.canRead)
-            ntype = "no-access";
+        isBad = (!stat.canRead) || (stat.error != null);
 
-        return {
+        r = {
             id: "",
             text: stat.name,
             state: {
@@ -43,10 +42,16 @@ var _adapters = {
                 disabled: false,
                 selected: false
             },
-            children: (stat.isDir ? true : []),
             data: stat,
-            type: ntype
-        }
+            type: "default"
+        };
+
+        if (isBad)
+            r.type = "no-access";
+        else
+            r.children = (stat.isDir ? true : []);
+
+        return r;
     },
 
     none: function (stat) {
@@ -89,8 +94,12 @@ function ext2icon(filepath) {
     var icon = path.join("icons", ext + ".png");
 
     // Handle folders.
-    if (fs.statSync(filepath).isDirectory())
-        return path.join("icons", "_folder.png");
+    try {
+        if (fs.statSync(filepath).isDirectory())
+            return path.join("icons", "_folder.png");
+    } catch (ex) {
+        return path.join("icons", "_blank.png");
+    }
 
     if (ext != "" && fs.existsSync(path.join("public", icon)))
         return icon;
@@ -102,14 +111,31 @@ function ext2icon(filepath) {
 function stat2json(filepath, fnadapter, filest) {
     var upwd, gpwd;
 
-    if (!filest)
-        filest = fs.statSync(filepath);
-
     if (!fnadapter)
         fnadapter = _adapters.none;
 
-    upwd = posix.getpwnam(filest.uid);
-    gpwd = posix.getgrnam(filest.gid);
+    if (!filest) {
+        try {
+            filest = fs.statSync(filepath);
+        } catch (ex) {
+            filest = fnadapter({
+                path: filepath,
+                name: filepath == "/" ? "/" : path.basename(filepath),
+                error: "stat() error: " + ex
+            });
+        }
+    }
+
+    try {
+        upwd = posix.getpwnam(filest.uid);
+    } catch (ex) {
+        upwd = "?";
+    }
+    try {
+        gpwd = posix.getgrnam(filest.gid);
+    } catch (ex) {
+        gpwd = "?";
+    }
 
     return fnadapter({
         name: filepath == "/" ? "/" : path.basename(filepath),
@@ -198,7 +224,7 @@ exports.event = function (req, res) {
 };
 
 exports.get = function (req, res) {
-    var rpath, showHidden, fnadapter, fslist = [];
+    var rpath, showHidden, fnadapter, fslist = [], errlist = [];
 
     // Handle data adapters.
     fnadapter = _adapters.none;
@@ -222,15 +248,26 @@ exports.get = function (req, res) {
 
     fs.readdir(rpath, function (err, files) {
         if (err) {
-            // TODO: ERROR CODE.
-            console.log(err);
-            res.json([]);
-            return;
+            fslist.push({
+                path: rpath,
+                name: rpath == "/" ? "/" : path.basename(rpath),
+                error: "readdir() failed: " + err
+            });
         }
 
         _.each(files, function (file) {
-            var filepath = path.join(rpath, file);
-            var filest = fs.statSync(filepath);
+            var filest, filepath = path.join(rpath, file);
+
+            try {
+                filest = fs.statSync(filepath);
+            } catch (ex) {
+                fslist.push({
+                    path: filepath,
+                    name: filepath == "/" ? "/" : path.basename(filepath),
+                    error: "stat() failed: " + ex
+                });
+                return;
+            }
 
             if (!showHidden && file.charAt(0) == ".")
                 return;

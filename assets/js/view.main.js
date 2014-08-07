@@ -16,88 +16,44 @@
 
 var MainView = Backbone.View.extend({
 
-    columnOverlayId: null,
-    optionOverlayId: null,
-    filesystemView: null,
+    _columnsOverlayId: null,
+    _optionsOverlayId: null,
+    _errorsOverlayId: null,
 
-    onColumnCheckClick: function (colId, checked) {
-        var curVal = this._options.getOptionValue("columns");
-
-        if (checked)
-            this._options.setOptionValue("columns", _.uniq(curVal.concat(colId)));
-        else
-            this._options.setOptionValue("columns", _.without(curVal, colId));
-    },
+    _filesystemView: null,
+    _errors: [],
 
     showOptionsOverlay: function () {
-        var self = this;
-        var ul, optHiddenLi, overlayDiv;
-
-        overlayDiv = $("#" + this.optionOverlayId);
-        overlayDiv.css("margin", "1em");
-
-        ul = $("<ul></ul>");
-        optHiddenLi = $("<li></li>")
-            .append(
-                $("<input></input>")
-                    .attr("type", "checkbox")
-                    .attr("name", "optShowHidden")
-                    .attr("checked", self._options.getOptionValue("showHidden"))
-                    .on("change", function () {
-                        self._options.setOptionValue("showHidden", $(this).prop("checked"));
-                    }))
-            .append(
-                $("<label></label>")
-                    .attr("for", "optShowHidden")
-                    .text("Show hidden files"));
-
-        overlayDiv.append(optHiddenLi);
+        new OptionsOverlay({
+            el: $("#" + this._optionsOverlayId),
+            options: this._options
+        }).render();
     },
 
     // Display the overlay allowing the selection of the columns that will be
     // displayed in the file manager.
     showColumnsOverlay: function () {
-        var curVal = this._options.getOptionValue("columns");
-        var self = this;
-        var overlayEl = $("#" + this.columnOverlayId);
-        var overlayDiv = $("<div></div>");
-        var overlayUl = $("<ul></ul>");
+        new ColumnsOverlay({
+            el: $("#" + this._columnsOverlayId),
+            options: this._options
+        }).render();
+    },
 
-        overlayDiv.css("margin", "1em");
-        overlayDiv.append(overlayUl);
-
-        _.each(FilesView.getAvailableColumns(), function (colId) {
-            var li, chk, lbl, checked;
-
-            checked = _.contains(curVal, colId);
-
-            li = $("<li></li>");
-            chk = $("<input></input>")
-                .attr("type", "checkbox")
-                .attr("name", colId);
-            lbl = $("<label></label>")
-                .attr("for", colId)
-                .text(FilesView.getColumnName(colId));
-
-            if (checked)
-                chk.attr("checked", "checked");
-
-            li.append(chk.add(lbl));
-
-            chk.on("change", function () {
-                self.onColumnCheckClick.apply(self, [colId, $(this).prop("checked")]);
-            });
-
-            overlayUl.append(li);
-        });
-
-        overlayEl.append(overlayDiv);
+    showErrorsOverlay: function () {
+        new ErrorsOverlay({
+            el: $("#" + this._errorsOverlayId),
+            errors: this._errors,
+            options: this._options
+        }).render();
     },
 
     initialize: function (opts) {
         var self = this;
 
-        self.columnOverlayId = _.uniqueId("columnOverlay");
+        self._columnsOverlayId = _.uniqueId("columnsOverlay");
+        self._optionsOverlayId = _.uniqueId("optionsOverlay");
+        self._errorsOverlayId = _.uniqueId("errorsOverlay");
+
         self._options = opts.options;
 
         $("#mainLayout").w2layout({
@@ -109,16 +65,25 @@ var MainView = Backbone.View.extend({
                     toolbar: {
                         items: [
                             { type: "drop", id: "btnColumns", caption: "Columns",
-                                html: "<div id='" + self.columnOverlayId + "'></div>",
+                                html: "<div id='" + self._columnsOverlayId + "'></div>",
                                 overlay: {
                                     onShow: function () { self.showColumnsOverlay(); }
                                 }
                             },
                             { type: "drop", id: "btnOptions", caption: "Options",
-                                html: "<div id='" + self.optionOverlayId + "'></div>",
+                                html: "<div id='" + self._optionsOverlayId + "'></div>",
                                 overlay: {
                                     onShow: function () { self.showOptionsOverlay(); }
                                 }
+                            },
+                            { type: 'spacer' },
+                            { type: "drop", id: "btnErrors", caption: "Errors",
+                                html: "<div id='" + self._errorsOverlayId + "'></div>",
+                                overlay: {
+                                    width: 400,
+                                    onShow: function () { self.showErrorsOverlay(); }
+                                },
+                                icon: "icon-exclamation-sign"
                             }
                         ]
                     }
@@ -126,15 +91,49 @@ var MainView = Backbone.View.extend({
             ],
             onResize: function (ev) {
                 ev.onComplete = function () {
-                    if (self.filesystemView)
-                        self.filesystemView.resize();
+                    if (self._filesystemView)
+                        self._filesystemView.resize();
                 };
             }
         });
 
-        this.filesystemView = new FileSystemView({
+        this._filesystemView = new FileSystemView({
             el: $(w2ui["fs_layout"].el("main")),
             options: self._options
+        });
+
+        this._filesystemView.on("filesystemview:onerror", function (err) {
+            var button, toolbar;
+
+            self._errors.push(err);
+
+            console.log("Error: " + err.get("message"));
+
+            // Change the button caption.
+            toolbar = w2ui["fs_layout"].get("main").toolbar;
+            button = toolbar.get("btnErrors");
+            button.caption = "Errors (" + self._errors.length + ")";
+
+            // Change the button color to red to attract attention.
+            button.style = "color: red";
+
+            toolbar.refresh();
+        });
+
+        this._filesystemView.on("filesystemview:ondirectoryselected", function (path) {
+            var button, toolbar
+
+            self._errors = [];
+
+            // Reset the button caption.
+            toolbar = w2ui["fs_layout"].get("main").toolbar;
+            button = toolbar.get("btnErrors");
+            button.caption = "Errors";
+
+            // Remove the style on the button.
+            button.style = "";
+
+            toolbar.refresh();
         });
     }
 });

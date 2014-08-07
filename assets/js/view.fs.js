@@ -16,6 +16,9 @@
 
 var FileSystemView = Backbone.View.extend({
 
+    _txtPathId: _.uniqueId("fileSystemView"),
+    _currentErrors: [],
+
     initialize: function (opts) {
         var self = this;
 
@@ -35,7 +38,16 @@ var FileSystemView = Backbone.View.extend({
                 {
                     type: "main",
                     resizer: 5,
-                    resizable: true
+                    resizable: true,
+                    toolbar: [
+                        { type: "html",  id: "txtPath",
+                            html: "<div style='padding: 3px 10px;'>" +
+                                  "Path: " +
+                                  "<input size='100' id='" + self._txtPathId + "'" +
+                                  "       style='padding: 3px; border-radius: 2px; border: 1px solid silver' />" +
+                                  "</div>"
+                        }
+                    ]
                 }
             ]
         });
@@ -51,10 +63,34 @@ var FileSystemView = Backbone.View.extend({
         });
 
         self._dirTree.on("dirtreeview:ondirectoryselected", function (path) {
+            // Clear the errors
+            this._currentErrors = [];
+
+            // Open the new directory.
             self._filesView.openDirectory({
                 directory: path
             });
-        }, self);
+
+            $("#" + self._txtPathId).attr("value", path);
+
+            self.trigger("filesystemview:ondirectoryselected", path);
+        });
+
+        self._filesView.on("filesview:onfileserror", function (err) {
+            var newErr = new Backbone.Model(err);
+
+            newErr.set("message", err.get("name") + ": " + err.get("error"));
+
+            self.trigger("filesystemview:onerror", newErr);
+        });
+
+        $("#" + self._txtPathId).on("change", function () {
+            var newDir = $("#" + self._txtPathId).prop("value");
+
+            self._filesView.openDirectory({
+                directory: newDir
+            })
+        });
     },
 
     resize: function () {

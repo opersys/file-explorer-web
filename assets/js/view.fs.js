@@ -93,6 +93,14 @@ var FileSystemView = Backbone.View.extend({
         });
     },
 
+    // Refetch the current directory.
+    refresh: function () {
+        var self = this;
+
+        self._filesView.refresh();
+        self._dirTree.refresh();
+    },
+
     resize: function () {
         w2ui["fs_view_layout"].resize();
     }

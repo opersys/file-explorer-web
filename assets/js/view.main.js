@@ -64,6 +64,7 @@ var MainView = Backbone.View.extend({
                     type: "main",
                     toolbar: {
                         items: [
+                            { type: "button", id: "btnRefresh", icon: "icon-refresh" },
                             { type: "drop", id: "btnColumns", caption: "Columns",
                                 html: "<div id='" + self._columnsOverlayId + "'></div>",
                                 overlay: {
@@ -85,7 +86,11 @@ var MainView = Backbone.View.extend({
                                 },
                                 icon: "icon-exclamation-sign"
                             }
-                        ]
+                        ],
+                        onClick: function (event) {
+                            if (event.target == "btnRefresh")
+                                self._filesystemView.refresh();
+                        }
                     }
                 }
             ],

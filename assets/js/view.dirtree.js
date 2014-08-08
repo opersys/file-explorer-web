@@ -52,6 +52,10 @@ var DirTreeView = Backbone.View.extend({
                 self.trigger("dirtreeview:ondirectoryselected", obj.node.data.path);
             }
         );
-    }
+    },
 
+    // Refetch the current directory.
+    refresh: function () {
+        this.$el.jstree("refresh");
+    }
 });

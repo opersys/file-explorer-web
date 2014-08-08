@@ -123,18 +123,20 @@ var FilesView = Backbone.View.extend({
         openDirectory: function (options) {
             var self = this;
 
-            if (options.hasOwnProperty("directory"))
-                self._currentDir = options.directory;
-            if (options.hasOwnProperty("sortField"))
-                self._sortField = options.sortField;
-            if (options.hasOwnProperty("sortDesc"))
-                self._sortDesc = options.sortDesc;
+            if (options) {
+                if (options.hasOwnProperty("directory"))
+                    self._currentDir = options.directory;
+                if (options.hasOwnProperty("sortField"))
+                    self._sortField = options.sortField;
+                if (options.hasOwnProperty("sortDesc"))
+                    self._sortDesc = options.sortDesc;
+            }
 
             // Save the last sort options so they can be restored.
             self._options.setOptionValue("sortField", self._sortField);
             self._options.setOptionValue("sortDesc", self._sortDesc);
 
-            if (options.hasOwnProperty("directory"))
+            if (options && options.hasOwnProperty("directory"))
                 console.log("Browsing: " + self._currentDir);
 
             // Must close the collection to free the event source.
@@ -175,7 +177,11 @@ var FilesView = Backbone.View.extend({
 
                 self._filesGrid.render();
             });
+        },
 
+        // Refetch the current directoy.
+        refresh: function () {
+            this.openDirectory();
         },
 
         initialize: function (options) {

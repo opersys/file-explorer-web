@@ -47,6 +47,7 @@ app.get("/", function (req, res) { res.redirect("/index.html"); });
 app.get("/apropos", function (req, res) { res.redirect("/apropos.html"); });
 app.get("/fs/:part", fsroute.get);
 app.get("/fsev", fsroute.event);
+app.get("/dl", fsroute.dl);
 
 server.listen(app.get('port'), function() {});
 

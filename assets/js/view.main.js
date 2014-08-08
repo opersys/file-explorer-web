@@ -126,7 +126,7 @@ var MainView = Backbone.View.extend({
         });
 
         this._filesystemView.on("filesystemview:ondirectoryselected", function (path) {
-            var button, toolbar
+            var button, toolbar;
 
             self._errors = [];
 

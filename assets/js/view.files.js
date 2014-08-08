@@ -65,6 +65,12 @@ var FilesView = Backbone.View.extend({
                 })
             });
 
+            self._filesGrid.onDblClick.subscribe(function (e, args) {
+                var dataItem = self._filesGrid.getDataItem(args.row);
+
+                window.open("/dl?p=" + encodeURIComponent(dataItem.get("path")), "_self");
+            });
+
             self._updateColumnsFormatter();
         },
 

@@ -223,6 +223,28 @@ exports.event = function (req, res) {
     };
 };
 
+// Download
+exports.dl = function (req, res) {
+    var fileDl;
+
+    if (req.query.p) {
+        try {
+            fileDl = fs.createReadStream(req.query.p);
+
+            res.set({
+                "Content-Disposition": "attachment; filename=" + path.basename(req.query.p)
+            });
+
+            fileDl.on("data", function (chunk) {
+                res.send(chunk);
+            });
+
+        } catch (ex) {
+        }
+    }
+};
+
+// File system handler.
 exports.get = function (req, res) {
     var rpath, showHidden, fnadapter, fslist = [], errlist = [];
 

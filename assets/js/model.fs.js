@@ -15,46 +15,7 @@
  */
 
 var File = Backbone.Model.extend({
-    idAttribute: "name",
-
-    initialize: function () {
-        this.attributes["ui-collapsed"] = true;
-        this.attributes["ui-row"] = 0;
-        this.attributes["ui-children"] = [];
-    },
-
-    set: function (n, v) {
-        Backbone.Model.prototype.set.apply(this, arguments);
-
-        // Calculate the file's path.
-        this.attributes["path"] = this.collection.root() + this.get("name");
-    }
-});
-
-var Directory = Backbone.Collection.extend({
-    model: File,
-
-    url: function() {
-        return "/fs/dirs?p=" + this._root;
-    },
-
-    initialize: function (rootPath) {
-        this._root = rootPath;
-
-        this._ev = new EventSource("/fsev?p=" + self._currentDir);
-
-        this._ev.addEventListener("create", function (ev) {
-            var data = JSON.parse(ev.data);
-        });
-
-        this._ev.addEventListener("delete", function (ev) {
-            var data = JSON.parse(ev.data);
-        });
-    },
-
-    root: function () {
-        return this._rootPath;
-    }
+    idAttribute: "name"
 });
 
 var Files = Backbone.Collection.extend({

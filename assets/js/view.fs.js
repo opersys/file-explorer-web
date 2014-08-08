@@ -71,9 +71,7 @@ var FileSystemView = Backbone.View.extend({
                 directory: path
             });
 
-            $("#" + self._txtPathId).attr("value", path);
-
-            self.trigger("filesystemview:ondirectoryselected", path);
+            $("#" + self._txtPathId).val(path);
         });
 
         self._filesView.on("filesview:onfileserror", function (err) {
@@ -84,12 +82,17 @@ var FileSystemView = Backbone.View.extend({
             self.trigger("filesystemview:onerror", newErr);
         });
 
+        self._filesView.on("filesview:ondirectoryselected", function (path) {
+            // Forward the directory selection to the main view.
+            self.trigger("filesystemview:ondirectoryselected", path);
+        });
+
         $("#" + self._txtPathId).on("change", function () {
             var newDir = $("#" + self._txtPathId).prop("value");
 
             self._filesView.openDirectory({
                 directory: newDir
-            })
+            });
         });
     },
 

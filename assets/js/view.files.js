@@ -183,6 +183,8 @@ var FilesView = Backbone.View.extend({
 
                 self._filesGrid.render();
             });
+
+            self.trigger("filesview:ondirectoryselected", self._currentDir);
         },
 
         // Refetch the current directoy.

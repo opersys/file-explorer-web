@@ -19,6 +19,63 @@ var FileSystemView = Backbone.View.extend({
     _txtPathId: _.uniqueId("fileSystemView"),
     _currentErrors: [],
 
+    _onPathTextChange: function () {
+        var newDir = $("#" + self._txtPathId).prop("value");
+
+        self._filesView.openDirectory({
+            directory: newDir
+        });
+    },
+
+    _onTreeViewDirectorySelected: function (path) {
+        var self = this;
+
+        // Clear the errors
+        self._currentErrors = [];
+
+        // Open the new directory.
+        self._filesView.openDirectory({
+            directory: path
+        });
+    },
+
+    // Double click action in the file explorer.
+    _onFilesDoubleClickAction: function (file) {
+        if (file.get("isDir")) {
+            this._filesView.openDirectory({
+                directory: file.get("path")
+            });
+        } else {
+
+        }
+    },
+
+    _onDirectorySelected: function (path) {
+        var self = this;
+
+        $("#" + self._txtPathId).val(path);
+
+        // Forward the directory selection to the main view.
+        this.trigger("filesystemview:ondirectoryselected", path);
+    },
+
+    _onFilesError: function () {
+        var newErr = new Backbone.Model(err);
+
+        newErr.set("message", err.get("name") + ": " + err.get("error"));
+
+        this.trigger("filesystemview:onerror", newErr);
+    },
+
+    _onFilesSelection: function (files) {
+        if (files.length == 0)
+            $("#lblSelection").text("");
+        else if (files.length == 1)
+            $("#lblSelection").text(files[0].get("name"));
+        else
+            $("#lblSelection").text(files.length + " files selected.");
+    },
+
     initialize: function (opts) {
         var self = this;
 
@@ -43,10 +100,16 @@ var FileSystemView = Backbone.View.extend({
                         { type: "html",  id: "txtPath",
                             html: "<div style='padding: 3px 10px;'>" +
                                   "Path: " +
-                                  "<input size='100' id='" + self._txtPathId + "'" +
+                                  "<input size='75' id='" + self._txtPathId + "'" +
                                   "       style='padding: 3px; border-radius: 2px; border: 1px solid silver' />" +
                                   "</div>"
-                        }
+                        },
+                        { type: "html", id: "lblSelection" ,
+                            html: "<div id='lblSelection' style='padding: 3px 10px;'></div>"
+                        },
+                        { type: "spacer" },
+                        { type: "button", id: "btnDownload", "caption": "Download", icon: "icon-download" },
+                        { type: "button", id: "btnUpload", "caption": "Upload", icon: "icon-upload" }
                     ]
                 }
             ]
@@ -62,37 +125,30 @@ var FileSystemView = Backbone.View.extend({
             options: self._options
         });
 
+        // Event wiring.
+
         self._dirTree.on("dirtreeview:ondirectoryselected", function (path) {
-            // Clear the errors
-            this._currentErrors = [];
-
-            // Open the new directory.
-            self._filesView.openDirectory({
-                directory: path
-            });
-
-            $("#" + self._txtPathId).val(path);
+            self._onTreeViewDirectorySelected.apply(self, [path]);
         });
 
         self._filesView.on("filesview:onfileserror", function (err) {
-            var newErr = new Backbone.Model(err);
-
-            newErr.set("message", err.get("name") + ": " + err.get("error"));
-
-            self.trigger("filesystemview:onerror", newErr);
+            self._onFilesError.apply(self, [err]);
         });
 
         self._filesView.on("filesview:ondirectoryselected", function (path) {
-            // Forward the directory selection to the main view.
-            self.trigger("filesystemview:ondirectoryselected", path);
+            self._onDirectorySelected.apply(self, [path]);
+        });
+
+        self._filesView.on("filesview:onfilesselection", function (files) {
+            self._onFilesSelection.apply(self, [files]);
+        });
+
+        self._filesView.on("filesview:ondoubleclickaction", function (file) {
+            self._onFilesDoubleClickAction.apply(self, [file]);
         });
 
         $("#" + self._txtPathId).on("change", function () {
-            var newDir = $("#" + self._txtPathId).prop("value");
-
-            self._filesView.openDirectory({
-                directory: newDir
-            });
+            self._onPathTextChange.apply(self);
         });
     },
 

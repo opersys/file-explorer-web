@@ -49,26 +49,21 @@ var FilesView = Backbone.View.extend({
 
             self._filesGrid.setSelectionModel(new Slick.RowSelectionModel());
 
+            // Wire grid events.
             self._filesGrid.onColumnsReordered.subscribe(function (e, args) {
-                var cols = self._filesGrid.getColumns();
-                var colIds = _.map(cols, function (colData) {
-                    return colData.id;
-                });
-
-                self._options.setOptionValue("columns", colIds);
+                self._onColumnReordered.apply(self, [args]);
             });
 
             self._filesGrid.onSort.subscribe(function (e, args) {
-                self.openDirectory({
-                    sortField: args.sortCol.field,
-                    sortDesc: (!args.sortAsc)
-                })
+                self._onSort.apply(self, [args]);
             });
 
             self._filesGrid.onDblClick.subscribe(function (e, args) {
-                var dataItem = self._filesGrid.getDataItem(args.row);
+                self._onDblClick.apply(self, [args]);
+            });
 
-                window.open("/dl?p=" + encodeURIComponent(dataItem.get("path")), "_self");
+            self._filesGrid.getSelectionModel().onSelectedRangesChanged.subscribe(function (e, args) {
+                self._onSelectedRangeChanged.apply(self, [args]);
             });
 
             self._updateColumnsFormatter();
@@ -90,8 +85,48 @@ var FilesView = Backbone.View.extend({
             }
         },
 
+        // Grid events.
+
+        _onColumnReordered: function (args) {
+            var cols = self._filesGrid.getColumns();
+            var colIds = _.map(cols, function (colData) {
+                return colData.id;
+            });
+
+            this._options.setOptionValue("columns", colIds);
+        },
+
+        _onSort: function (args) {
+            this.openDirectory({
+                sortField: args.sortCol.field,
+                sortDesc: (!args.sortAsc)
+            })
+        },
+
+        _onDblClick: function (args) {
+            var dataItem = this._filesGrid.getDataItem(args.row);
+            this.trigger("filesview:ondoubleclickaction", dataItem)
+            //window.open("/dl?p=" + encodeURIComponent(dataItem.get("path")), "_self");
+        },
+
+        _onSelectedRangeChanged: function (args) {
+            var self = this;
+            var r, files = [];
+
+            _.each(args, function (range) {
+                for (var r = range.fromRow; r <= range.toRow; r++)
+                    files.push(self._filesGrid.getDataItem(r));
+            });
+
+            self.trigger("filesview:onfilesselection", files);
+        },
+
+        // Other events.
+
         _onDirectoryFetched: function () {
             var self = this;
+
+            self.trigger("filesview:ondirectoryselected", self._currentDir);
 
             if (!self._filesGrid)
                 self._initializeGrid();
@@ -183,8 +218,6 @@ var FilesView = Backbone.View.extend({
 
                 self._filesGrid.render();
             });
-
-            self.trigger("filesview:ondirectoryselected", self._currentDir);
         },
 
         // Refetch the current directoy.

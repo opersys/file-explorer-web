@@ -106,7 +106,6 @@ var FilesView = Backbone.View.extend({
         _onDblClick: function (args) {
             var dataItem = this._filesGrid.getDataItem(args.row);
             this.trigger("filesview:ondoubleclickaction", dataItem)
-            //window.open("/dl?p=" + encodeURIComponent(dataItem.get("path")), "_self");
         },
 
         _onSelectedRangeChanged: function (args) {
@@ -178,14 +177,14 @@ var FilesView = Backbone.View.extend({
             self._options.setOptionValue("sortDesc", self._sortDesc);
 
             if (options && options.hasOwnProperty("directory"))
-                console.log("Browsing: " + self._currentDir);
+                console.log("Browsing: " + self._currentDir.get("path"));
 
             // Must close the collection to free the event source.
             if (self._files)
                 self._files.close();
 
             self._files = new Files({
-                rootPath: self._currentDir,
+                rootPath: self._currentDir.get("path"),
                 showHidden: self._options.getOptionValue("showHidden"),
                 sortField: self._sortField,
                 sortDesc: self._sortDesc
@@ -195,8 +194,7 @@ var FilesView = Backbone.View.extend({
                 reset: true,
                 success: function () {
                     self._onDirectoryFetched.apply(self);
-                }//,
-                //error: function () { self._onDirectoryFetchError.apply(self); }
+                }
             });
 
             self._files.on("add", function () {

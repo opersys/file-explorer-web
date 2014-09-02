@@ -14,7 +14,8 @@
         "underscore": "*",
         "ws": "*",
         "inotify": "*",
-        "unix-access": "*"
+        "unix-access": "*",
+        "jquery-file-upload-middleware": "*"
     },
     "devDependencies": {
         "jade": "*",

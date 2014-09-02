@@ -18,6 +18,8 @@ var FileSystemView = Backbone.View.extend({
 
     _txtPathId: _.uniqueId("fileSystemView"),
     _currentErrors: [],
+    _selectedFiles: [],
+    _uploadOverlay: null,
 
     _onPathTextChange: function () {
         var newDir = $("#" + self._txtPathId).prop("value");
@@ -27,7 +29,7 @@ var FileSystemView = Backbone.View.extend({
         });
     },
 
-    _onTreeViewDirectorySelected: function (path) {
+    _onTreeViewDirectorySelected: function (dir) {
         var self = this;
 
         // Clear the errors
@@ -35,7 +37,7 @@ var FileSystemView = Backbone.View.extend({
 
         // Open the new directory.
         self._filesView.openDirectory({
-            directory: path
+            directory: dir
         });
     },
 
@@ -46,17 +48,23 @@ var FileSystemView = Backbone.View.extend({
                 directory: file.get("path")
             });
         } else {
-
+            window.open("/dl?p=" + encodeURIComponent(file.get("path")), "_self");
         }
     },
 
-    _onDirectorySelected: function (path) {
+    _onDirectorySelected: function (dir) {
         var self = this;
 
-        $("#" + self._txtPathId).val(path);
+        $("#" + self._txtPathId).val(dir.get("path"));
+        self._currentDir = dir;
 
         // Forward the directory selection to the main view.
-        this.trigger("filesystemview:ondirectoryselected", path);
+        this.trigger("filesystemview:ondirectoryselected", dir);
+
+        this.updateToolbar();
+
+        // Change the directory of the upload singleton.
+        UploadView.get().setDirectory(dir);
     },
 
     _onFilesError: function () {
@@ -74,12 +82,52 @@ var FileSystemView = Backbone.View.extend({
             $("#lblSelection").text(files[0].get("name"));
         else
             $("#lblSelection").text(files.length + " files selected.");
+
+        this._selectedFiles = files;
+
+        this.updateToolbar();
+    },
+
+    showUploadOverlay: function () {
+        this._uploadOverlay = new UploadOverlay({
+            el: $("#" + this._uploadOverlayId),
+            dir: this._currentDir,
+            options: this._options
+        });
+
+        this._uploadOverlay.render();
+    },
+
+    hideUploadOverlay: function () {
+        if (this._uploadOverlay)
+            this._uploadOverlay.hide();
+    },
+
+    updateToolbar: function () {
+        // Update the toolbar, preemptively disable all functions.
+        w2ui["fs_view_layout"].get("main").toolbar.disable("btnNew");
+        w2ui["fs_view_layout"].get("main").toolbar.disable("btnDelete");
+        w2ui["fs_view_layout"].get("main").toolbar.disable("btnDownload");
+        w2ui["fs_view_layout"].get("main").toolbar.disable("btnUpload");
+
+        if (this._selectedFiles.length == 1
+            && this._selectedFiles[0].get("canRead")
+            && !this._selectedFiles[0].get("isDir"))
+            w2ui["fs_view_layout"].get("main").toolbar.enable("btnDownload");
+
+        if (this._currentDir.get("canWrite")) {
+            w2ui["fs_view_layout"].get("main").toolbar.enable("btnNew");
+            w2ui["fs_view_layout"].get("main").toolbar.enable("btnUpload");
+        }
+
+        if (this._selectedFiles.length == 1 && this._selectedFiles[0].get("canWrite"))
+            w2ui["fs_view_layout"].get("main").toolbar.enable("btnDelete");
     },
 
     initialize: function (opts) {
         var self = this;
 
-        // Initialize the collections.
+        self._uploadOverlayId = _.uniqueId("uploadOverlay");
         self._options = opts.options;
 
         // Initialize the internal layout
@@ -108,8 +156,22 @@ var FileSystemView = Backbone.View.extend({
                             html: "<div id='lblSelection' style='padding: 3px 10px;'></div>"
                         },
                         { type: "spacer" },
-                        { type: "button", id: "btnDownload", "caption": "Download", icon: "icon-download" },
-                        { type: "button", id: "btnUpload", "caption": "Upload", icon: "icon-upload" }
+                        { hint: "New folder",
+                            type: "button", id: "btnNew", icon: "icon-file-alt" },
+                        { hint: "Delete file",
+                            type: "button", id: "btnDelete", icon: "icon-remove" },
+                        { hint: "Download selected file",
+                            type: "button", id: "btnDownload", "caption": "Download", icon: "icon-download"
+                        },
+                        { hint: "Upload a file",
+                            type: "drop", id: "btnUpload", "caption": "Upload", icon: "icon-upload",
+                            html: "<div id='" + self._uploadOverlayId + "'></div>",
+                            overlay: {
+                                width: 400,
+                                onShow: function () { self.showUploadOverlay(); },
+                                onHide: function () { self.hideUploadOverlay(); }
+                            }
+                        }
                     ]
                 }
             ]
@@ -127,8 +189,8 @@ var FileSystemView = Backbone.View.extend({
 
         // Event wiring.
 
-        self._dirTree.on("dirtreeview:ondirectoryselected", function (path) {
-            self._onTreeViewDirectorySelected.apply(self, [path]);
+        self._dirTree.on("dirtreeview:ondirectoryselected", function (dir) {
+            self._onTreeViewDirectorySelected.apply(self, [dir]);
         });
 
         self._filesView.on("filesview:onfileserror", function (err) {

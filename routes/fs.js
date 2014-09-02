@@ -162,6 +162,7 @@ function stat2json(filepath, fnadapter, filest) {
         isFIFO: filest.isFIFO(),
         isSocket: filest.isSocket(),
         canRead: access.sync(filepath, "r"),
+        canWrite: access.sync(filepath, "w"),
         canEnter: access.sync(filepath, "x")
     });
 }

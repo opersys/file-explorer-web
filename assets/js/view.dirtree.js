@@ -49,7 +49,7 @@ var DirTreeView = Backbone.View.extend({
 
         }).on("activate_node.jstree",
             function (ev, obj) {
-                self.trigger("dirtreeview:ondirectoryselected", obj.node.data.path);
+                self.trigger("dirtreeview:ondirectoryselected", new File(obj.node.data));
             }
         );
     },

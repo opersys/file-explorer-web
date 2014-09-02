@@ -85,7 +85,8 @@ module.exports = function (grunt) {
                     "assets/css/slick-default-theme.css",
                     "assets/css/w2ui-1.4.min.css",
                     "assets/css/style.css",
-                    "assets/css/style-jstree.css"
+                    "assets/css/style-jstree.css",
+                    "assets/css/dropzone.css"
                 ],
                 dest: "dist/public/css/<%= pkg.name %>_styles.css"
             },
@@ -109,7 +110,8 @@ module.exports = function (grunt) {
                     "assets/jslib/slickgrid/slick.formatters.js",
                     "assets/jslib/slickgrid/plugins/slick.cellselectionmodel.js",
                     "assets/jslib/slickgrid/plugins/slick.cellrangeselector.js",
-                    "assets/jslib/slickgrid/plugins/slick.rowselectionmodel.js"
+                    "assets/jslib/slickgrid/plugins/slick.rowselectionmodel.js",
+                    "assets/jslib/dropzone.js"
                 ],
                 dest: "dist/public/js/<%= pkg.name %>_libs.js"
             },
@@ -126,9 +128,11 @@ module.exports = function (grunt) {
                     "assets/js/overlay.view.columns.js",
                     "assets/js/overlay.view.options.js",
                     "assets/js/overlay.view.errors.js",
+                    "assets/js/overlay.view.upload.js",
+                    "assets/js/view.upload.js",
                     "assets/js/view.dirtree.js",
                     "assets/js/view.files.js",
-                    "assets/js/view.fs.js",
+                    "assets/js/view.filesystem.js",
                     "assets/js/view.main.js",
                     "assets/js/fs.js"
                 ],

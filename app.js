@@ -21,6 +21,7 @@ var exStatic = require("serve-static");
 var http = require("http");
 var path = require("path");
 var WebSocket = require("ws").Server;
+var upload = require("jquery-file-upload-middleware");
 var spawn = require("child_process").spawn;
 
 // Express application
@@ -37,6 +38,8 @@ app.set("views", path.join(__dirname, "views"));
 app.use(exSession({ secret: 'la grippe' }));
 app.use(exStatic(path.join(__dirname, "public")));
 
+upload.configure({ uploadUrl: "/up" });
+
 // development only
 if ("development" == app.get("env"))
     app.use(exLogger("combined"));
@@ -48,6 +51,13 @@ app.get("/apropos", function (req, res) { res.redirect("/apropos.html"); });
 app.get("/fs/:part", fsroute.get);
 app.get("/fsev", fsroute.event);
 app.get("/dl", fsroute.dl);
+app.use("/up", function (req, res, next) {
+    upload.fileHandler({
+        uploadDir: function () {
+            return req.query.p;
+        }
+    })(req, res, next)
+});
 
 server.listen(app.get('port'), function() {});
 

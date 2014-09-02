@@ -64,14 +64,17 @@ var MainView = Backbone.View.extend({
                     type: "main",
                     toolbar: {
                         items: [
-                            { type: "button", id: "btnRefresh", icon: "icon-refresh" },
-                            { type: "drop", id: "btnColumns", caption: "Columns",
+                            { hint: "Refresh view",
+                                type: "button", id: "btnRefresh", icon: "icon-refresh" },
+                            { hint: "Displayed columns",
+                                type: "drop", id: "btnColumns", caption: "Columns",
                                 html: "<div id='" + self._columnsOverlayId + "'></div>",
                                 overlay: {
                                     onShow: function () { self.showColumnsOverlay(); }
                                 }
                             },
-                            { type: "drop", id: "btnOptions", caption: "Options",
+                            { hint: "File manager options",
+                                type: "drop", id: "btnOptions", caption: "Options",
                                 html: "<div id='" + self._optionsOverlayId + "'></div>",
                                 overlay: {
                                     onShow: function () { self.showOptionsOverlay(); }

@@ -16,6 +16,9 @@
 
 var DirTreeView = Backbone.View.extend({
 
+    _openDirParts: [],
+    _openCurrent: null,
+
     initialize: function (options) {
         var self = this;
 
@@ -47,11 +50,64 @@ var DirTreeView = Backbone.View.extend({
             },
             "plugins" : [ "search", "types" ]
 
-        }).on("activate_node.jstree",
+        }).on("select_node.jstree",
             function (ev, obj) {
                 self.trigger("dirtreeview:ondirectoryselected", new File(obj.node.data));
             }
+        ).on("ready.jstree",
+            function () {
+                if (self._options.getOptionValue("lastDirectory"))
+                    self.openDirectory(self._options.getOptionValue("lastDirectory"));
+            }
         );
+    },
+
+    _doOpenDirectory: function () {
+        var self = this;
+
+        if (self.$el.jstree("get_node", self._openCurrent)) {
+
+            console.log("Will try to load: " + self._openCurrent);
+
+            self.$el.jstree("load_node", self._openCurrent, function () {
+                console.log("Loaded: " + self._openCurrent);
+
+                self.$el.jstree("open_node", self._openCurrent);
+
+                var newPart = self._openDirParts.shift();
+
+                if (newPart) {
+                    if (/\/$/.test(self._openCurrent))
+                        self._openCurrent += newPart;
+                    else
+                        self._openCurrent += ("/" + newPart);
+
+                    self._doOpenDirectory();
+                } else {
+
+                    // Activate the last node.
+                    self.$el.jstree("select_node", self._openCurrent);
+
+                    self._openCurrent = null;
+                    self._openDirParts = [];
+                }
+            });
+        } else {
+            console.log("Not found in tree: " + self._openCurrent);
+
+            self._openCurrent = null;
+            self._openDirParts = [];
+        }
+    },
+
+    openDirectory: function (dir) {
+        var self = this;
+
+        self._openDirParts = dir.split("/");
+        self._openDirParts.shift();
+        self._openCurrent = "/";
+
+        self._doOpenDirectory();
     },
 
     // Refetch the current directory.

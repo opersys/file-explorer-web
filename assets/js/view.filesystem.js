@@ -63,6 +63,9 @@ var FileSystemView = Backbone.View.extend({
 
         this.updateToolbar();
 
+        // Change the last directory option to the new directory.
+        this._options.setOptionValue("lastDirectory", dir.get("path"));
+
         // Change the directory of the upload singleton.
         UploadView.get().setDirectory(dir);
     },

@@ -35,7 +35,7 @@ var _adapters = {
         isBad = (!stat.canRead) || (stat.error != null);
 
         r = {
-            id: "",
+            id: stat.path,
             text: stat.name,
             state: {
                 opened: stat.name == "/",

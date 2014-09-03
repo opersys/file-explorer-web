@@ -22,11 +22,13 @@ var FileSystemView = Backbone.View.extend({
     _uploadOverlay: null,
 
     _onPathTextChange: function () {
+        var self = this;
         var newDir = $("#" + self._txtPathId).prop("value");
 
-        self._filesView.openDirectory({
+/*        self._filesView.openDirectory({
             directory: newDir
-        });
+        });*/
+        self._dirTree.openDirectory(newDir);
     },
 
     _onTreeViewDirectorySelected: function (dir) {

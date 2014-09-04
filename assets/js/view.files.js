@@ -216,6 +216,13 @@ var FilesView = Backbone.View.extend({
 
                 self._filesGrid.render();
             });
+
+            self._files.on("change", function () {
+                self._filesGrid.invalidate();
+                self._filesGrid.updateRowCount();
+
+                self._filesGrid.render();
+            });
         },
 
         // Refetch the current directoy.

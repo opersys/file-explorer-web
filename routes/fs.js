@@ -193,17 +193,23 @@ exports.event = function (req, res) {
 
         watchId: inotify.addWatch({
             path: rpath,
-            watch_for: Inotify.IN_CREATE | Inotify.IN_DELETE,
+            watch_for: Inotify.IN_CREATE | Inotify.IN_DELETE | Inotify.IN_MODIFY,
 
             callback: function (event) {
+                var evType = null;
+
                 if (!event.name)
                     return;
 
                 var fpath = path.join(rpath, event.name);
 
-                if (event.mask & Inotify.IN_CREATE) {
+                if (event.mask & Inotify.IN_CREATE) evType = "create";
+                else if (event.mask & Inotify.IN_MODIFY) evType = "modify";
+                else if (event.mask & Inotify.IN_DELETE) evType = "delete";
+
+                if (evType != "delete") {
                     try {
-                        evWrapper.eventSource.emit("create", {
+                        evWrapper.eventSource.emit(evType, {
                             path: fpath,
                             stat: stat2json(fpath)
                         });
@@ -213,7 +219,7 @@ exports.event = function (req, res) {
                 }
                 // We don't have the full stat for the delete event but at least
                 // pass the name entry to the interface.
-                else if (event.mask & Inotify.IN_DELETE) {
+                else {
                     evWrapper.eventSource.emit("delete", {
                         path: fpath,
                         stat: { name: path.basename(fpath) }

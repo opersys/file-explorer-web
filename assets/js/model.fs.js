@@ -86,6 +86,16 @@ var Files = Backbone.Collection.extend({
 
             self.remove(data.stat.name);
         });
+
+        this._ev.addEventListener("modify", function (ev) {
+            var data = JSON.parse(ev.data);
+            var model = null;
+
+            console.log("Modified: " + data.path);
+
+            model = self.get(data.stat.name);
+            model.set(data.stat);
+        });
     },
 
     parse: function (response) {

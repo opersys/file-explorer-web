@@ -27,11 +27,14 @@ var ErrorsOverlay = Backbone.View.extend({
 
         overlayEl.css("margin", "1em");
 
-        _.each(this._errors, function (err) {
-            var overlayLi = $("<li></li>").text(err.get("message"));
-            overlayUl.append(overlayLi);
-        });
+        if (this._errors && this._errors.length > 0) {
+            _.each(this._errors, function (err) {
+                var overlayLi = $("<li></li>").text(err.get("message"));
+                overlayUl.append(overlayLi);
+            });
 
-        overlayEl.append(overlayUl);
+            overlayEl.append(overlayUl);
+        }
+        else overlayEl.append($("<div></div>").text("No errors were registered."));
     }
 });

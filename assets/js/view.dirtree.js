@@ -62,6 +62,18 @@ var DirTreeView = Backbone.View.extend({
         );
     },
 
+    _endOpenDirectory: function () {
+        var self = this;
+
+        console.log("Ending openDirectory at: " + self._openCurrent);
+
+        // Activate the last node.
+        self.$el.jstree("select_node", self._openCurrent);
+
+        self._openCurrent = null;
+        self._openDirParts = [];
+    },
+
     _doOpenDirectory: function () {
         var self = this;
 
@@ -83,25 +95,20 @@ var DirTreeView = Backbone.View.extend({
                         self._openCurrent += ("/" + newPart);
 
                     self._doOpenDirectory();
-                } else {
-
-                    // Activate the last node.
-                    self.$el.jstree("select_node", self._openCurrent);
-
-                    self._openCurrent = null;
-                    self._openDirParts = [];
                 }
+                else self._endOpenDirectory();
             });
-        } else {
-            console.log("Not found in tree: " + self._openCurrent);
 
-            self._openCurrent = null;
-            self._openDirParts = [];
+            return;
         }
+
+        self._endOpenDirectory();
     },
 
     openDirectory: function (dir) {
         var self = this;
+
+        console.log("Opening directory: " + dir);
 
         self._openDirParts = dir.split("/");
         self._openDirParts.shift();

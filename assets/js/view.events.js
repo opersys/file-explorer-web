@@ -52,6 +52,8 @@ var EventsView = Backbone.View.extend({
             // Immediately resize the canvas.
             self._eventGrid.resizeCanvas();
 
+            self.trigger("eventsview:onnewevent");
+
             self._eventGrid.render();
         });
 
@@ -62,6 +64,8 @@ var EventsView = Backbone.View.extend({
             // Immediately resize the canvas.
             self._eventGrid.resizeCanvas();
 
+            self.trigger("eventsview:onnewevent");
+
             self._eventGrid.render();
         });
 
@@ -69,8 +73,15 @@ var EventsView = Backbone.View.extend({
             self._eventGrid.invalidate();
             self._eventGrid.updateRowCount();
 
+            self.trigger("eventsview:onnewevent");
+
             self._eventGrid.render();
         });
+    },
+
+    resize: function () {
+        if (this._eventGrid)
+            this._eventGrid.resizeCanvas();
     },
 
     initialize: function (opts) {

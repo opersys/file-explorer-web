@@ -34,6 +34,7 @@ $(document).ready(function () {
     options.initOption("sortInfo", { field: "name", desc: false });
     options.initOption("directory", true);
     options.initOption("lastDirectory", "/");
+    options.initOption("minimizeEvents", false);
 
     mainView = new MainView({
         el: $("#mainLayout"),

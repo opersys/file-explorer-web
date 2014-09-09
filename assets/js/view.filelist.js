@@ -198,6 +198,11 @@ var FileListView = Backbone.View.extend({
             });
         },
 
+        resize: function () {
+            if (this._filesGrid)
+                this._filesGrid.resizeCanvas();
+        },
+
         // Refetch the current directoy.
         refresh: function () {
             this.openDirectory();

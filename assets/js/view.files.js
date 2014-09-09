@@ -16,6 +16,9 @@
 
 var FilesView = Backbone.View.extend({
 
+    _eventInfoId: _.uniqueId("filesview"),
+    _eventCount: 0,
+
     refresh: function () {
         this._filelistView.refresh();
     },
@@ -77,6 +80,39 @@ var FilesView = Backbone.View.extend({
         });
     },
 
+    _setFilesystemEventCount: function (n) {
+        $("#" + this._eventInfoId)
+            .text("Filesystem events: " + n + " " + Humanize.pluralize(n, "event", "events"));
+    },
+
+    _setButton: function(toolbar, btnId, value) {
+        _.each(toolbar.items, function (b) {
+            if (b.id == btnId) {
+                _.each(_.keys(value), function (k) {
+                    b[k] = value[k];
+                });
+            }
+        });
+    },
+
+    _onMinimizeChange: function () {
+        var self = this;
+        var panel = w2ui["files_events_view_layout"].get("preview");
+
+        if (self._options.getOptionValue("minimizeEvents")) {
+            self._setButton(panel.toolbar, "btnMinimize", {icon: "icon-chevron-up"});
+            w2ui["files_events_view_layout"].set("preview", {size: 30});
+        } else {
+            self._setButton(panel.toolbar, "btnMinimize", {icon: "icon-chevron-down"});
+            w2ui["files_events_view_layout"].set("preview", {size: 200});
+        }
+
+        panel.toolbar.refresh("btnMinimize");
+
+        self._filelistView.resize();
+        self._eventsView.resize();
+    },
+
     initialize: function (opts) {
         var self = this;
 
@@ -92,7 +128,18 @@ var FilesView = Backbone.View.extend({
                 },
                 {
                     type: "preview",
-                    size: 150
+                    size: 150,
+                    toolbar: {
+                        items: [
+                            { type: "html", html: "<div id=" + self._eventInfoId + "></div>" },
+                            { type: "spacer" },
+                            { type: "button", id: "btnMinimize", icon: "icon-chevron-down" }
+                        ],
+                        onClick: function (ev) {
+                            if (ev.target == "btnMinimize")
+                                self._options.toggleOption("minimizeEvents");
+                        }
+                    }
                 }
             ]
         });
@@ -115,9 +162,20 @@ var FilesView = Backbone.View.extend({
             self._onDirectorySelected.apply(self, [dir]);
         });
 
+        self._eventsView.on("eventsview:onnewevent", function (dir) {
+            self._eventCount++;
+            self._setFilesystemEventCount(self._eventCount);
+        });
+
         self._options.getOption("sortInfo").on("change", function () {
             self._onSortChange.apply(self);
         });
+
+        self._options.getOption("minimizeEvents").on("change", function () {
+            self._onMinimizeChange.apply(self);
+        });
+
+        self._setFilesystemEventCount(0);
     },
 
     resize: function () {

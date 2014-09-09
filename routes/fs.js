@@ -168,7 +168,7 @@ function stat2json(filepath, fnadapter, filest) {
 }
 
 exports.event = function (req, res) {
-    var rpath;
+    var rpath, cbCount = 0, lastCbTime, lastDelta, avgDelta = 0, sumDelta = 0;
 
     // No "p" parameter means we dump data for the root.
     if (!req.query.p)
@@ -196,7 +196,41 @@ exports.event = function (req, res) {
             watch_for: Inotify.IN_CREATE | Inotify.IN_DELETE | Inotify.IN_MODIFY,
 
             callback: function (event) {
-                var evType = null;
+                var evType = null, nowTs;
+
+                if (evWrapper.watchId < 0) return;
+
+                // Calculate the average delay between callbacks.
+                nowTs = new Date().getTime();
+
+                if (lastCbTime) {
+                    cbCount++;
+
+                    lastDelta = nowTs - lastCbTime;
+                    sumDelta += lastDelta;
+                    avgDelta = sumDelta / cbCount;
+                }
+
+                lastCbTime = new Date().getTime();
+
+                // The interface will certainly take 1 event per second without
+                // a itch so reset the rate counters.
+                if (avgDelta > 1) {
+                    cbCount = 0;
+                    sumDelta = 0;
+                    avgDelta = 0;
+                }
+
+                // If we reach 100 calls with a delay < 1 second, stop the inotify
+                // watch.
+                if (cbCount >= 100 && avgDelta < 1.0) {
+                    console.log(
+                        "Inotify overflow (" + cbCount +" callbacks, average delta: " + avgDelta + ")");
+
+                    inotify.removeWatch(evWrapper.watchId);
+                    evWrapper.watchId = -1;
+                    return;
+                }
 
                 if (!event.name)
                     return;

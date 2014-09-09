@@ -37,6 +37,10 @@ var Files = Backbone.Collection.extend({
         return this._errors;
     },
 
+    getEvents: function () {
+        return this._fileEvents;
+    },
+
     comparator: function (m1, m2) {
         var r;
 
@@ -65,6 +69,7 @@ var Files = Backbone.Collection.extend({
         this._rootPath = options.rootPath;
         this._ev = new EventSource("/fsev?p=" + this._rootPath);
         this._showHidden = options.showHidden;
+        this._fileEvents = new Events([], { fs: this });
 
         if (options.hasOwnProperty("sortField"))
             this._sortField = options.sortField;
@@ -89,12 +94,10 @@ var Files = Backbone.Collection.extend({
 
         this._ev.addEventListener("modify", function (ev) {
             var data = JSON.parse(ev.data);
-            var model = null;
 
             console.log("Modified: " + data.path);
 
-            model = self.get(data.stat.name);
-            model.set(data.stat);
+            self.get(data.stat.name).set(data.stat);
         });
     },
 

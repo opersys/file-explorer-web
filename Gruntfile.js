@@ -125,15 +125,18 @@ module.exports = function (grunt) {
                 src: [
                     "assets/js/model.options.js",
                     "assets/js/model.fs.js",
+                    "assets/js/model.events.js",
                     "assets/js/overlay.view.columns.js",
                     "assets/js/overlay.view.options.js",
                     "assets/js/overlay.view.errors.js",
                     "assets/js/overlay.view.upload.js",
                     "assets/js/view.upload.js",
                     "assets/js/view.dirtree.js",
-                    "assets/js/view.files.js",
+                    "assets/js/view.filelist.js",
                     "assets/js/view.filesystem.js",
                     "assets/js/view.main.js",
+                    "assets/js/view.events.js",
+                    "assets/js/view.files.js",
                     "assets/js/fs.js"
                 ],
                 dest: "dist/public/js/<%= pkg.name %>_main.js"

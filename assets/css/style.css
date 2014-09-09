@@ -22,57 +22,13 @@ a {
     color: #00B7FF;
 }
 
-/* CHART VIEW */
-
-.chartView {
-    padding-top: 2px;
-    padding-bottom: 2px;
-    padding-left: 10px;
-    padding-right: 10px;
-}
-
-/* LOGCAT VIEW SPECIFICS */
-
-.logcatview .slick-viewport .grid-canvas .slick-cell {
+xk.logcatview .slick-viewport .grid-canvas .slick-cell {
     border: 1px white solid;
 }
 
 /* Hides the header column for logcat views. */
-.logcatview .slick-header-columns {
+.slickgrid-no-header .slick-header-columns {
     height: 0px;
-}
-
-.logcatview .slick-cell.error {
-    background-color: red;
-}
-
-.logcatview .slick-cell.warning {
-    background-color: #ffff00;
-}
-
-/* PROCESS VIEW SPECIFICS */
-
-.slick-cell {
-    vertical-align: middle;
-}
-
-.processview .slick-cell.dead {
-    color: #666666 ;
-}
-
-/* Process view treeview feature. */
-.toggle.expand {
-	background: url(../images/expand.gif) no-repeat center center;
-}
-
-.toggle.collapse {
-	background: url(../images/collapse.gif) no-repeat center center;
-}
-
-.toggle {
-    height: 9px;
-    width: 9px;
-    display: inline-block;
 }
 
 /* SLICKGRID FORMATTING */

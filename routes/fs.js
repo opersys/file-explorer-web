@@ -214,7 +214,7 @@ exports.event = function (req, res) {
                             stat: stat2json(fpath)
                         });
                     } catch (ex) {
-                        console.log("Stat call failed: " + fpath);
+                        console.log("Stat call failed in '" + evType + "' event: " + fpath);
                     }
                 }
                 // We don't have the full stat for the delete event but at least

@@ -25,9 +25,6 @@ var FileSystemView = Backbone.View.extend({
         var self = this;
         var newDir = $("#" + self._txtPathId).prop("value");
 
-/*        self._filesView.openDirectory({
-            directory: newDir
-        });*/
         self._dirTree.openDirectory(newDir);
     },
 
@@ -38,20 +35,15 @@ var FileSystemView = Backbone.View.extend({
         self._currentErrors = [];
 
         // Open the new directory.
-        self._filesView.openDirectory({
-            directory: dir
-        });
+        self._filesView.openDirectory(dir);
     },
 
     // Double click action in the file explorer.
     _onFilesDoubleClickAction: function (file) {
-        if (file.get("isDir")) {
-            this._filesView.openDirectory({
-                directory: file.get("path")
-            });
-        } else {
+        if (file.get("isDir"))
+            this._filesView.openDirectory(file.get("path"));
+        else
             window.open("/dl?p=" + encodeURIComponent(file.get("path")), "_self");
-        }
     },
 
     _onDirectorySelected: function (dir) {
@@ -206,7 +198,7 @@ var FileSystemView = Backbone.View.extend({
             self._onDirectorySelected.apply(self, [path]);
         });
 
-        self._filesView.on("filesview:onfilesselection", function (files) {
+        self._filesView.on("filesview:onfilesselected", function (files) {
             self._onFilesSelection.apply(self, [files]);
         });
 
@@ -223,11 +215,15 @@ var FileSystemView = Backbone.View.extend({
     refresh: function () {
         var self = this;
 
-        self._filesView.refresh();
+        self._filesEventsView.refresh();
         self._dirTree.refresh();
     },
 
     resize: function () {
+        var self = this;
+
+        self._filesView.resize();
+
         w2ui["fs_view_layout"].resize();
     }
 });

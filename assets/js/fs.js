@@ -31,8 +31,7 @@ $(document).ready(function () {
     options.fetch();
     options.initOption("columns", ["name", "uid", "gid", "size"]);
     options.initOption("showHidden", false);
-    options.initOption("sortField", "name");
-    options.initOption("sortDesc", true);
+    options.initOption("sortInfo", { field: "name", desc: false });
     options.initOption("directory", true);
     options.initOption("lastDirectory", "/");
 

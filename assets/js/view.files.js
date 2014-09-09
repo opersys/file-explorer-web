@@ -16,282 +16,111 @@
 
 var FilesView = Backbone.View.extend({
 
-        _filesOptions: {
-            formatterFactory: {
-                getFormatter: function () {
-                    return function (row, cell, value, col, data) {
-                        return data.get(col.field);
-                    };
-                }
-            },
+    refresh: function () {
+        this._filelistView.refresh();
+    },
 
-            enableColumnReorder: true,
-            enableCellNavigation: true,
-            forceFitColumns: true
-        },
+    _onFileSelected: function (files) {
+        this.trigger("filesview:onfileselected", [files]);
+    },
 
-        // This is the actual list of columns passed to SlickGrid.
-        _columns: [],
-
-        _sizeFormatter: function (row, cell, value, columnDef, file) {
-            return Humanize.filesizeformat(file.get(columnDef.field));
-        },
-
-        _iconFormatter: function (row, cell, value, columnDef, file) {
-            return "<img src='" + file.get("icon") + "' />";
-        },
-
-        _initializeGrid: function () {
-            var self = this;
-
-            self._filesGrid = new Slick.Grid(w2ui["fs_view_layout"].el("main"),
-                self._files, self._columns, self._filesOptions);
-
-            self._filesGrid.setSelectionModel(new Slick.RowSelectionModel());
-
-            // Wire grid events.
-            self._filesGrid.onColumnsReordered.subscribe(function (e, args) {
-                self._onColumnReordered.apply(self, [args]);
-            });
-
-            self._filesGrid.onSort.subscribe(function (e, args) {
-                self._onSort.apply(self, [args]);
-            });
-
-            self._filesGrid.onDblClick.subscribe(function (e, args) {
-                self._onDblClick.apply(self, [args]);
-            });
-
-            self._filesGrid.getSelectionModel().onSelectedRangesChanged.subscribe(function (e, args) {
-                self._onSelectedRangeChanged.apply(self, [args]);
-            });
-
-            self._updateColumnsFormatter();
-        },
-
-        _updateColumnsFormatter: function () {
-            var self = this;
-
-            if (self._filesGrid.getColumnIndex("size") != null) {
-                self._columns[self._filesGrid.getColumnIndex("size")].formatter = function () {
-                    return self._sizeFormatter.apply(self, arguments);
-                };
-            }
-
-            if (self._filesGrid.getColumnIndex("icon") != null) {
-                self._columns[self._filesGrid.getColumnIndex("icon")].formatter = function () {
-                    return self._iconFormatter.apply(self, arguments);
-                };
-            }
-        },
-
-        // Grid events.
-
-        _onColumnReordered: function (args) {
-            var cols = self._filesGrid.getColumns();
-            var colIds = _.map(cols, function (colData) {
-                return colData.id;
-            });
-
-            this._options.setOptionValue("columns", colIds);
-        },
-
-        _onSort: function (args) {
-            this.openDirectory({
-                sortField: args.sortCol.field,
-                sortDesc: (!args.sortAsc)
-            })
-        },
-
-        _onDblClick: function (args) {
-            var dataItem = this._filesGrid.getDataItem(args.row);
-            this.trigger("filesview:ondoubleclickaction", dataItem)
-        },
-
-        _onSelectedRangeChanged: function (args) {
-            var self = this;
-            var r, files = [];
-
-            _.each(args, function (range) {
-                for (var r = range.fromRow; r <= range.toRow; r++)
-                    files.push(self._filesGrid.getDataItem(r));
-            });
-
-            self.trigger("filesview:onfilesselection", files);
-        },
-
-        // Other events.
-
-        _onDirectoryFetched: function () {
-            var self = this;
-
-            self.trigger("filesview:ondirectoryselected", self._currentDir);
-
-            if (!self._filesGrid)
-                self._initializeGrid();
-
-            if (self._files.getErrors().length > 0) {
-                self._files.getErrors().each(function (m) {
-                    self.trigger("filesview:onfileserror", m);
-                });
-            }
-
-            self._filesGrid.setData(self._files);
-            self._filesGrid.render();
-        },
-
-        setColumns: function (columnsIds) {
-            var self = this;
-            var cols = _.map(columnsIds, function (colId) {
-                return FilesView._availableColumns[colId];
-            });
-
-            self._columns = cols;
-
-            if (self._filesGrid) {
-                self._filesGrid.setColumns(cols);
-                self._updateColumnsFormatter();
-                self._filesGrid.render();
-            }
-        },
-
-        // This function show and fetch a new directory view.
-        // The "options" hash might contain:
-        //   directory: switch the view to that specific directory,
-        //   sortField: sort using that field
-        //   sortAsc:   ascent/descent sort, default to asc.
-        openDirectory: function (options) {
-            var self = this;
-
-            if (options) {
-                if (options.hasOwnProperty("directory"))
-                    self._currentDir = options.directory;
-                if (options.hasOwnProperty("sortField"))
-                    self._sortField = options.sortField;
-                if (options.hasOwnProperty("sortDesc"))
-                    self._sortDesc = options.sortDesc;
-            }
-
-            // Save the last sort options so they can be restored.
-            self._options.setOptionValue("sortField", self._sortField);
-            self._options.setOptionValue("sortDesc", self._sortDesc);
-
-            if (options && options.hasOwnProperty("directory"))
-                console.log("Browsing: " + self._currentDir.get("path"));
-
-            // Must close the collection to free the event source.
-            if (self._files)
-                self._files.close();
-
-            self._files = new Files({
-                rootPath: self._currentDir.get("path"),
-                showHidden: self._options.getOptionValue("showHidden"),
-                sortField: self._sortField,
-                sortDesc: self._sortDesc
-            });
-
-            self._files.fetch({
-                reset: true,
-                success: function () {
-                    self._onDirectoryFetched.apply(self);
-                }
-            });
-
-            self._files.on("add", function () {
-                self._filesGrid.invalidate();
-                self._filesGrid.updateRowCount();
-
-                // Immediately resize the canvas.
-                self._filesGrid.resizeCanvas();
-
-                self._filesGrid.render();
-            });
-
-            self._files.on("remove", function () {
-                self._filesGrid.invalidate();
-                self._filesGrid.updateRowCount();
-
-                // Immediately resize the canvas.
-                self._filesGrid.resizeCanvas();
-
-                self._filesGrid.render();
-            });
-
-            self._files.on("change", function () {
-                self._filesGrid.invalidate();
-                self._filesGrid.updateRowCount();
-
-                self._filesGrid.render();
-            });
-        },
-
-        // Refetch the current directoy.
-        refresh: function () {
-            this.openDirectory();
-        },
-
-        initialize: function (options) {
-            var self = this;
-
-            self._options = options.options;
-
-            // Option traps
-            self._options.getOption("columns").on("change", function () {
-                var newCols = self._options.getOptionValue("columns");
-                self.setColumns(newCols);
-            });
-        }
+    _onDirectorySelected: function () {
 
     },
 
-    // Static methods.
+    _onDirectoryFetched: function () {
+        var self = this;
 
-    {
-        getColumnName: function (colId) {
-            return FilesView._availableColumns[colId].optionName;
-        },
+        self._filelistView.setDirectory(self._files, self._currentDir);
 
-        getAvailableColumns: function () {
-            return _.keys(FilesView._availableColumns);
-        },
+        self.trigger("filesview:ondirectoryselected", self._currentDir);
 
-        _availableColumns: {
-            "icon": {
-                optionName: "Icon", id: "icon", name: "&nbsp;", field: "icon",
-                sortable: true, minWidth: 25, maxWidth: 25
-            },
-            "name": {
-                optionName: "File name", id: "name", name: "Name", field: "name",
-                sortable: true
-            },
-            "username": {
-                optionName: "Owner username", id: "username", name: "User", field: "username",
-                sortable: true
-            },
-            "groupname": {
-                optionName: "Owner groupname", id: "groupname", name: "Group", field: "groupname",
-                sortable: true
-            },
-            "uid": {
-                optionName: "Owner user ID", id: "uid", name: "UID", field: "uid",
-                sortable: true, minWidth: 30, maxWidth: 50
-            },
-            "gid": {
-                optionName: "Owner group ID", id: "gid", name: "GID", field: "gid",
-                sortable: true, minWidth: 30, maxWidth: 50
-            },
-            "size": {
-                optionName: "File size", id: "size", name: "Size", field: "size",
-                sortable: true, minWidth: 30
-            },
-            "modestr": {
-                optionName: "File modes", id: "mode", name: "Mode", field: "modestr",
-                sortable: false
-            },
-            "nmode": {
-                optionName: "File mode number", id: "nmode", name: "Numeric mode", field: "mode",
-                sortable: false
-            }
+        if (self._files.getErrors().length > 0) {
+            self._files.getErrors().each(function (m) {
+                self.trigger("filesview:onfileserror", m);
+            });
         }
+    },
+
+    _onSortChange: function () {
+        var self = this;
+
+        if (self._currentDir)
+            self.openDirectory(self._currentDir);
+    },
+
+    openDirectory: function (dir) {
+        var self = this, sortInfo;
+
+        self._currentDir = dir;
+
+        // Must close the collection to free the event source.
+        if (self._files)
+            self._files.close();
+
+        sortInfo = self._options.getOptionValue("sortInfo");
+
+        self._files = new Files({
+            rootPath: self._currentDir.get("path"),
+            showHidden: self._options.getOptionValue("showHidden"),
+            sortField: sortInfo.field,
+            sortDesc: sortInfo.desc
+        });
+
+        self._eventsView.setEvents(self._files.getEvents());
+
+        self._files.fetch({
+            reset: true,
+            success: function () {
+                self._onDirectoryFetched.apply(self);
+            }
+        });
+    },
+
+    initialize: function (opts) {
+        var self = this;
+
+        self._options = opts.options;
+
+        // Initialize the internal layout
+        self.$el.w2layout({
+            name: "files_events_view_layout",
+            padding: 4,
+            panels: [
+                {
+                    type: "main"
+                },
+                {
+                    type: "preview",
+                    size: 150
+                }
+            ]
+        });
+
+        self._filelistView = new FileListView({
+            el: w2ui["files_events_view_layout"].el("main"),
+            options: self._options
+        });
+
+        self._eventsView = new EventsView({
+            el: $(w2ui["files_events_view_layout"].el("preview")).addClass("slickgrid-no-header"),
+            options: self._options
+        });
+
+        self._filelistView.on("filelistview:onfilesselected", function (files) {
+            self._onFileSelected.apply(self, [files]);
+        });
+
+        self._filelistView.on("filelistview:ondirectoryloaded", function (dir) {
+            self._onDirectorySelected.apply(self, [dir]);
+        });
+
+        self._options.getOption("sortInfo").on("change", function () {
+            self._onSortChange.apply(self);
+        });
+    },
+
+    resize: function () {
+        w2ui["files_events_view_layout"].resize();
     }
-);
+});

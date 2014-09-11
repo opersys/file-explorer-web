@@ -215,7 +215,7 @@ var FileSystemView = Backbone.View.extend({
     refresh: function () {
         var self = this;
 
-        self._filesEventsView.refresh();
+        self._filesView.refresh();
         self._dirTree.refresh();
     },
 

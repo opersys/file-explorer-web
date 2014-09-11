@@ -205,7 +205,7 @@ var FileListView = Backbone.View.extend({
 
         // Refetch the current directoy.
         refresh: function () {
-            this.openDirectory();
+            this.setDirectory(this._files, this._currentDir);
         },
 
         initialize: function (options) {

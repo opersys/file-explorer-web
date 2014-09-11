@@ -1,2 +1,2 @@
-module.exports = require("./_bin/inotify.node");
+module.exports = require("./inotify.node");
 

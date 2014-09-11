@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+var os = require("os");
+var fs = require("fs");
+var path = require("path");
+var _ = require("underscore");
+
 module.exports = function (grunt) {
 
     grunt.initConfig({
@@ -220,7 +225,29 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-pack");
     grunt.loadNpmTasks("grunt-chmod");
 
+    grunt.registerTask("dev_bin", "Pick the right binaries for development", function (arch) {
+        var selArch, defArch = os.arch();
+
+        if (!arch)
+            selArch = defArch;
+        else
+            selArch = arch;
+
+        var files = fs.readdirSync("./dist/_bin");
+        var r = new RegExp("_" + selArch + "$");
+
+        _.each(files, function (file) {
+            var f = path.join("./dist/_bin", file);
+
+            if (r.test(file)) {
+                grunt.file.copy(f, "./dist/" + file.replace("_" + selArch, ""));
+                grunt.log.writeln("Using " + file);
+            }
+        });
+    });
+
     grunt.registerTask("default", ["mkdir", "copyto", "concat", /*"uglify", "cssmin",*/ "jade", "exec:npm_install"]);
+    grunt.registerTask("dev", ["default", "dev_bin"]);
     grunt.registerTask("pack", ["default", "chmod", "compress", "exec:md5sum"]);
 }
 

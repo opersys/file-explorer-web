@@ -1,6 +1,6 @@
 'use strict';
 
-var access = require('./_bin/access');
+var access = require('./access');
 
 /** Test for existence of file */
 var F_OK = 0;

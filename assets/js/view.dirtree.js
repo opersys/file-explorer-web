@@ -62,13 +62,14 @@ var DirTreeView = Backbone.View.extend({
         );
     },
 
-    _endOpenDirectory: function () {
+    _endOpenDirectory: function (done) {
         var self = this;
 
         console.log("Ending openDirectory at: " + self._openCurrent);
 
         // Activate the last node.
-        self.$el.jstree("select_node", self._openCurrent);
+        if (!done)
+            self.$el.jstree("select_node", self._openCurrent);
 
         self._openCurrent = null;
         self._openDirParts = [];
@@ -96,13 +97,14 @@ var DirTreeView = Backbone.View.extend({
 
                     self._doOpenDirectory();
                 }
-                else self._endOpenDirectory();
+                else
+                    self._endOpenDirectory(false);
             });
 
             return;
         }
 
-        self._endOpenDirectory();
+        self._endOpenDirectory(true);
     },
 
     openDirectory: function (dir) {

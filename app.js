@@ -23,6 +23,7 @@ var path = require("path");
 var WebSocket = require("ws").Server;
 var upload = require("jquery-file-upload-middleware");
 var spawn = require("child_process").spawn;
+var os = require("os");
 
 // Express application
 var app = express();
@@ -53,6 +54,7 @@ app.get("/fsev", fsroute.event);
 app.get("/dl", fsroute.dl);
 app.use("/up", function (req, res, next) {
     upload.fileHandler({
+        tmpDir: os.platform() == "android" ? "/data/local/tmp" : os.tmpdir(),
         uploadDir: function () {
             return req.query.p;
         }

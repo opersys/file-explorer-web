@@ -234,13 +234,14 @@ module.exports = function (grunt) {
             selArch = arch;
 
         var files = fs.readdirSync("./dist/_bin");
-        var r = new RegExp("_" + selArch + "$");
+        var r = new RegExp(selArch + "$");
 
         _.each(files, function (file) {
             var f = path.join("./dist/_bin", file);
+            var e = new RegExp("\\.{0,1}_{0,1}" + selArch);
 
             if (r.test(file)) {
-                grunt.file.copy(f, "./dist/" + file.replace("_" + selArch, ""));
+                grunt.file.copy(f, "./dist/" + file.replace(e, ""));
                 grunt.log.writeln("Using " + file);
             }
         });

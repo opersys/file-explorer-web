@@ -63,6 +63,9 @@ module.exports = function (grunt) {
                         [
                             "public/**/*",
                             "routes/*.js",
+                            "posix.js",
+                            "inotify.js",
+                            "unix-access.js",
                             "app.js"
                         ]
                     },

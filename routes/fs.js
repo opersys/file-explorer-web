@@ -15,12 +15,12 @@
  */
 
 var fs = require("fs");
-var posix = require("posix");
-var access = require("unix-access");
 var path = require("path");
 var eventSource = require("event-source-emitter");
 var _ = require("underscore");
-var Inotify = require("inotify").Inotify;
+var access = require("../unix-access.js");
+var posix = require("../posix.js");
+var Inotify = require("../inotify.js").Inotify;
 
 // Current inotify instance.
 var inotify = new Inotify();

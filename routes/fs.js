@@ -193,7 +193,13 @@ exports.event = function (req, res) {
 
         watchId: inotify.addWatch({
             path: rpath,
-            watch_for: Inotify.IN_CREATE | Inotify.IN_DELETE | Inotify.IN_MODIFY,
+            watch_for:
+                Inotify.IN_CREATE |
+                    Inotify.IN_DELETE |
+                    Inotify.IN_MODIFY |
+                    Inotify.IN_ATTRIB |
+                    Inotify.IN_MOVED_FROM |
+                    Inotify.IN_MOVED_TO,
 
             callback: function (event) {
                 var evType = null, nowTs;
@@ -239,6 +245,7 @@ exports.event = function (req, res) {
 
                 if (event.mask & Inotify.IN_CREATE) evType = "create";
                 else if (event.mask & Inotify.IN_MODIFY) evType = "modify";
+                else if (event.mask & Inotify.IN_ATTRIB) evType = "modify";
                 else if (event.mask & Inotify.IN_DELETE) evType = "delete";
 
                 if (evType != "delete") {

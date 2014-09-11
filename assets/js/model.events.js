@@ -19,6 +19,12 @@ var Event = Backbone.Model.extend({ });
 var Events = Backbone.Collection.extend({
     model: Event,
 
+    changedUidGidTemplate: _.template(
+        "File <%= name %> owner/group changed from "
+            + "<%= oldUsername %>[<%= oldUid %>]/<%= oldGroupname %>[<%= oldGid %>]"
+            + " to "
+            + "<%= newUsername %>[<%= newUid %>]/<%= newGroupname %>[<%= newGid %>]"),
+
     getItem: function (i) {
         return this.at(i);
     },
@@ -43,6 +49,44 @@ var Events = Backbone.Collection.extend({
                 file: m.get("path"),
                 time: moment().format("HH:mm:ss"),
                 msg: "Size change: " + m.get("path") + ", from: " + oldSize + " to " + newSize
+            }));
+        }
+
+        if (m.hasChanged("name")) {
+            var newName, oldName;
+
+            newName = m.get("name");
+            oldName = pa["name"];
+
+            self.add(new Event({
+                type: "change",
+                attr: "name",
+                file: m.get("path"),
+                time: moment().format("HH:mm:ss"),
+                msg: "Name change from: " + oldName + " to: " + newName
+            }));
+        }
+
+        if (m.hasChanged("uid")
+            || m.hasChanged("gid")
+            || m.hasChanged("username")
+            || m.hasChanged("groupname")) {
+            var p = {};
+
+            p.newGid = m.get("gid");
+            p.oldGid = pa["gid"];
+            p.newUid = m.get("uid");
+            p.oldUid = pa["uid"];
+            p.newUsername = m.get("username");
+            p.oldUsername = pa["username"];
+            p.newGroupname = m.get("groupname");
+            p.oldGroupname = pa["groupname"];
+
+            self.add(new Event({
+                type: "change",
+                file: m.get("path"),
+                time: moment().format("HH:mm:ss"),
+                msg: self.changedUidGidTemplate(p)
             }));
         }
     },

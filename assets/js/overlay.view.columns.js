@@ -40,7 +40,7 @@ var ColumnsOverlay = Backbone.View.extend({
         overlayDiv.css("margin", "1em");
         overlayDiv.append(overlayUl);
 
-        _.each(FilesView.getAvailableColumns(), function (colId) {
+        _.each(FileListView.getAvailableColumns(), function (colId) {
             var li, chk, lbl, checked;
 
             checked = _.contains(curVal, colId);
@@ -51,7 +51,7 @@ var ColumnsOverlay = Backbone.View.extend({
                 .attr("name", colId);
             lbl = $("<label></label>")
                 .attr("for", colId)
-                .text(FilesView.getColumnName(colId));
+                .text(FileListView.getColumnName(colId));
 
             if (checked)
                 chk.attr("checked", "checked");

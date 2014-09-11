@@ -20,7 +20,11 @@ var FileListView = Backbone.View.extend({
             formatterFactory: {
                 getFormatter: function () {
                     return function (row, cell, value, col, data) {
-                        return data.get(col.field);
+
+                        if (col.field == "ctime" || col.field == "mtime")
+                            return moment(data.get(col.field)).format("MMM Do HH:mm");
+                        else
+                            return data.get(col.field);
                     };
                 }
             },
@@ -268,6 +272,14 @@ var FileListView = Backbone.View.extend({
             "nmode": {
                 optionName: "File mode number", id: "nmode", name: "Numeric mode", field: "mode",
                 sortable: false
+            },
+            "ctime": {
+                optionName: "Creation time", id: "ctime", name: "Create time", field: "ctime",
+                sortable: true
+            },
+            "mtime": {
+                optionName: "Modification time", id: "mtime", name: "Modif. time", field: "mtime",
+                sortable: true
             }
         }
     }

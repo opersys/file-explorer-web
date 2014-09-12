@@ -31,18 +31,23 @@ var FileListView = Backbone.View.extend({
 
             enableColumnReorder: true,
             enableCellNavigation: true,
-            forceFitColumns: true
+            forceFitColumns: true,
+            enableAsyncPostRender: true
         },
 
         // This is the actual list of columns passed to SlickGrid.
         _columns: [],
+
+        _dateTimeFormatter: function (row, cell, value, columnDef, file) {
+            return moment(file.get(columnDef.field)).format("MMM Do HH:mm");
+        },
 
         _sizeFormatter: function (row, cell, value, columnDef, file) {
             return Humanize.filesizeformat(file.get(columnDef.field));
         },
 
         _iconFormatter: function (row, cell, value, columnDef, file) {
-            return "<img src='" + file.get("icon") + "' />";
+            return "...";
         },
 
         _initializeGrid: function () {
@@ -86,6 +91,16 @@ var FileListView = Backbone.View.extend({
                     return self._iconFormatter.apply(self, arguments);
                 };
             }
+
+            var dateTimeCols = ["atime", "ctime", "mtime"];
+
+            _.each(dateTimeCols, function (dtCol) {
+                if (self._filesGrid.getColumnIndex(dtCol) != null) {
+                    self._columns[self._filesGrid.getColumnIndex(dtCol)].formatter = function () {
+                        return self._dateTimeFormatter.apply(self, arguments);
+                    };
+                }
+            });
         },
 
         // Grid events.
@@ -98,6 +113,7 @@ var FileListView = Backbone.View.extend({
             });
 
             this._options.setOptionValue("columns", colIds);
+            self._updateColumnsFormatter();
         },
 
         _onSort: function (args) {
@@ -239,7 +255,10 @@ var FileListView = Backbone.View.extend({
         _availableColumns: {
             "icon": {
                 optionName: "Icon", id: "icon", name: "&nbsp;", field: "icon",
-                sortable: true, minWidth: 25, maxWidth: 25
+                sortable: true, minWidth: 25, maxWidth: 25, renderOnResize: true,
+                asyncPostRender: function (cellNode, row, file, colDef) {
+                    $(cellNode).empty().append($("<img></img>").attr("src", file.get("icon")));
+                }
             },
             "name": {
                 optionName: "File name", id: "name", name: "Name", field: "name",

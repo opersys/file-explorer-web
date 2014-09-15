@@ -41,7 +41,7 @@ var FileSystemView = Backbone.View.extend({
     // Double click action in the file explorer.
     _onFileDoubleClickAction: function (file) {
         if (file.get("isDir"))
-            this._filesView.openDirectory(file.get("path"));
+            this._filesView.openDirectory(file);
         else
             window.open("/dl?p=" + encodeURIComponent(file.get("path")), "_self");
     },

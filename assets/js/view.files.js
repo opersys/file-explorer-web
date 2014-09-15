@@ -162,6 +162,10 @@ var FilesView = Backbone.View.extend({
             self._onDirectorySelected.apply(self, [dir]);
         });
 
+        self._filelistView.on("filelistview:ondoubleclickaction", function (file) {
+            self.trigger("filesview:ondoubleclickaction", file);
+        });
+
         self._eventsView.on("eventsview:onnewevent", function (dir) {
             self._eventCount++;
             self._setFilesystemEventCount(self._eventCount);

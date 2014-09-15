@@ -109,9 +109,10 @@ module.exports = function (grunt) {
                     "assets/jslib/backbone.localStorage-min.js",
                     "assets/jslib/humanize.min.js",
                     "assets/jslib/moment.min.js",
-                    "assets/jslib/smoothie.js",
                     "assets/jslib/w2ui-1.4.min.js",
                     "assets/jslib/jstree.min.js",
+                    /* SlickGrid requires this but this is not the complete
+                       JQuery UI distribution. Just the bare minimum was included. */
                     "assets/jslib/jquery-ui.min.js",
                     "assets/jslib/slickgrid/slick.core.js",
                     "assets/jslib/slickgrid/slick.grid.js",

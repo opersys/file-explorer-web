@@ -152,8 +152,8 @@ var FileSystemView = Backbone.View.extend({
                             { type: "html",  id: "txtPath",
                                 html: "<div style='padding: 3px 10px;'>" +
                                     "Path: " +
-                                    "<input size='75' id='" + self._txtPathId + "'" +
-                                    "       style='padding: 3px; border-radius: 2px; border: 1px solid silver' />" +
+                                    "<input size='50' id='" + self._txtPathId + "'" +
+                                    "       style='padding: 3px; border-radius: 2px; border: 1px solid silver;' />" +
                                     "</div>"
                             },
                             { type: "html", id: "lblSelection" ,

@@ -99,6 +99,14 @@ var Files = Backbone.Collection.extend({
 
             self.get(data.stat.name).set(data.stat);
         });
+
+        this._ev.addEventListener("rename", function (ev) {
+            var data = JSON.parse(ev.data);
+
+            console.log("Renamed: " + data.path);
+
+            self.get(data.oldName).set(data.stat);
+        });
     },
 
     parse: function (response) {

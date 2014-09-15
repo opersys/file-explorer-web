@@ -21,12 +21,13 @@ var _ = require("underscore");
 var access = require("../unix-access.js");
 var posix = require("../posix.js");
 var Inotify = require("../inotify.js").Inotify;
+var Cache = require("mem-cache");
 
 // Current inotify instance.
 var inotify = new Inotify();
 
-// Current inotify watch descriptors.
-var inWatch = {};
+//
+var renameCache = new Cache();
 
 var _adapters = {
     jstree: function (stat) {
@@ -238,17 +239,39 @@ exports.event = function (req, res) {
                     return;
                 }
 
-                if (!event.name)
-                    return;
+                if (!event.name) return;
 
                 var fpath = path.join(rpath, event.name);
+
+                if (event.mask & Inotify.IN_MOVED_FROM)
+                    renameCache.set(event.cookie, event.name, 1000);
+
+                if (event.mask & Inotify.IN_MOVED_TO) {
+
+                    var oldName = renameCache.get(event.cookie);
+
+                    if (oldName) {
+                        try {
+                            evWrapper.eventSource.emit("rename", {
+                                path: fpath,
+                                newName: event.name,
+                                oldName: oldName,
+                                stat: stat2json(fpath)
+                            });
+                        } catch (ex) {
+                            console.log("Stat call failed in 'rename' event: " + fpath);
+                        }
+
+                        renameCache.remove(event.cookie);
+                    }
+                }
 
                 if (event.mask & Inotify.IN_CREATE) evType = "create";
                 else if (event.mask & Inotify.IN_MODIFY) evType = "modify";
                 else if (event.mask & Inotify.IN_ATTRIB) evType = "modify";
                 else if (event.mask & Inotify.IN_DELETE) evType = "delete";
 
-                if (evType != "delete") {
+                if (evType && evType != "delete") {
                     try {
                         evWrapper.eventSource.emit(evType, {
                             path: fpath,
@@ -260,7 +283,7 @@ exports.event = function (req, res) {
                 }
                 // We don't have the full stat for the delete event but at least
                 // pass the name entry to the interface.
-                else {
+                else if (evType && evType == "delete") {
                     evWrapper.eventSource.emit("delete", {
                         path: fpath,
                         stat: { name: path.basename(fpath) }

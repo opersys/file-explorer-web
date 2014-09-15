@@ -14,7 +14,8 @@
         "underscore": "*",
         "ws": "*",
         "unix-access": "*",
-        "jquery-file-upload-middleware": "*"
+        "jquery-file-upload-middleware": "*",
+        "mem-cache": "*"
     },
     "devDependencies": {
         "jade": "*",

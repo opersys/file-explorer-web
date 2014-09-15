@@ -64,7 +64,7 @@ var FileSystemView = Backbone.View.extend({
         UploadView.get().setDirectory(dir);
     },
 
-    _onFilesError: function () {
+    _onFilesError: function (err) {
         var newErr = new Backbone.Model(err);
 
         newErr.set("message", err.get("name") + ": " + err.get("error"));

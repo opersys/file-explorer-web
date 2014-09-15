@@ -24,7 +24,7 @@ var FilesView = Backbone.View.extend({
     },
 
     _onFileSelected: function (files) {
-        this.trigger("filesview:onfileselected", [files]);
+        this.trigger("filesview:onfilesselected", files);
     },
 
     _onDirectorySelected: function () {

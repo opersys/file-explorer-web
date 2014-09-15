@@ -39,7 +39,7 @@ var FileSystemView = Backbone.View.extend({
     },
 
     // Double click action in the file explorer.
-    _onFilesDoubleClickAction: function (file) {
+    _onFileDoubleClickAction: function (file) {
         if (file.get("isDir"))
             this._filesView.openDirectory(file.get("path"));
         else
@@ -53,12 +53,12 @@ var FileSystemView = Backbone.View.extend({
         self._currentDir = dir;
 
         // Forward the directory selection to the main view.
-        this.trigger("filesystemview:ondirectoryselected", dir);
+        self.trigger("filesystemview:ondirectoryselected", dir);
 
-        this.updateToolbar();
+        self.updateToolbar();
 
         // Change the last directory option to the new directory.
-        this._options.setOptionValue("lastDirectory", dir.get("path"));
+        self._options.setOptionValue("lastDirectory", dir.get("path"));
 
         // Change the directory of the upload singleton.
         UploadView.get().setDirectory(dir);
@@ -121,6 +121,12 @@ var FileSystemView = Backbone.View.extend({
             w2ui["fs_view_layout"].get("main").toolbar.enable("btnDelete");
     },
 
+    downloadSelectedFiles: function () {
+        _.each(this._selectedFiles, function (file) {
+            window.open("/dl?p=" + encodeURIComponent(file.get("path")), "_self");
+        });
+    },
+
     initialize: function (opts) {
         var self = this;
 
@@ -141,35 +147,41 @@ var FileSystemView = Backbone.View.extend({
                     type: "main",
                     resizer: 5,
                     resizable: true,
-                    toolbar: [
-                        { type: "html",  id: "txtPath",
-                            html: "<div style='padding: 3px 10px;'>" +
-                                  "Path: " +
-                                  "<input size='75' id='" + self._txtPathId + "'" +
-                                  "       style='padding: 3px; border-radius: 2px; border: 1px solid silver' />" +
-                                  "</div>"
-                        },
-                        { type: "html", id: "lblSelection" ,
-                            html: "<div id='lblSelection' style='padding: 3px 10px;'></div>"
-                        },
-                        { type: "spacer" },
-                        { hint: "New folder",
-                            type: "button", id: "btnNew", icon: "icon-file-alt" },
-                        { hint: "Delete file",
-                            type: "button", id: "btnDelete", icon: "icon-remove" },
-                        { hint: "Download selected file",
-                            type: "button", id: "btnDownload", "caption": "Download", icon: "icon-download"
-                        },
-                        { hint: "Upload a file",
-                            type: "drop", id: "btnUpload", "caption": "Upload", icon: "icon-upload",
-                            html: "<div id='" + self._uploadOverlayId + "'></div>",
-                            overlay: {
-                                width: 400,
-                                onShow: function () { self.showUploadOverlay(); },
-                                onHide: function () { self.hideUploadOverlay(); }
+                    toolbar: {
+                        items: [
+                            { type: "html",  id: "txtPath",
+                                html: "<div style='padding: 3px 10px;'>" +
+                                    "Path: " +
+                                    "<input size='75' id='" + self._txtPathId + "'" +
+                                    "       style='padding: 3px; border-radius: 2px; border: 1px solid silver' />" +
+                                    "</div>"
+                            },
+                            { type: "html", id: "lblSelection" ,
+                                html: "<div id='lblSelection' style='padding: 3px 10px;'></div>"
+                            },
+                            { type: "spacer" },
+                            { hint: "New folder",
+                                type: "button", id: "btnNew", icon: "icon-file-alt" },
+                            { hint: "Delete file",
+                                type: "button", id: "btnDelete", icon: "icon-remove" },
+                            { hint: "Download selected file",
+                                type: "button", id: "btnDownload", "caption": "Download", icon: "icon-download"
+                            },
+                            { hint: "Upload a file",
+                                type: "drop", id: "btnUpload", "caption": "Upload", icon: "icon-upload",
+                                html: "<div id='" + self._uploadOverlayId + "'></div>",
+                                overlay: {
+                                    width: 400,
+                                    onShow: function () { self.showUploadOverlay(); },
+                                    onHide: function () { self.hideUploadOverlay(); }
+                                }
                             }
+                        ],
+                        onClick: function (ev) {
+                            if (ev.target == "btnDownload")
+                                self.downloadSelectedFiles();
                         }
-                    ]
+                    }
                 }
             ]
         });
@@ -203,7 +215,7 @@ var FileSystemView = Backbone.View.extend({
         });
 
         self._filesView.on("filesview:ondoubleclickaction", function (file) {
-            self._onFilesDoubleClickAction.apply(self, [file]);
+            self._onFileDoubleClickAction.apply(self, [file]);
         });
 
         $("#" + self._txtPathId).on("change", function () {

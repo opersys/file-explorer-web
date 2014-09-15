@@ -163,6 +163,16 @@ var FileListView = Backbone.View.extend({
             self._filesGrid.render();
         },
 
+        // Methods.
+
+        getSelectedFiles: function () {
+            var self = this;
+
+            return _.map(this._filesGrid.getSelectedRows(), function (r) {
+                return self._filesGrid.getDataItem(r);
+            });
+        },
+
         setColumns: function (columnsIds) {
             var self = this;
             var cols = _.map(columnsIds, function (colId) {

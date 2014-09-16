@@ -19,7 +19,14 @@ Dropzone.autoDiscover = false;
 var UploadView = Backbone.View.extend({
 
         _uploadFieldId: _.uniqueId("uploadView"),
+        _chkOverwriteId: _.uniqueId("uploadView"),
         _currentDir: null,
+        _overwrite: false,
+
+        _onCheckOverwriteChange: function (chkBox) {
+            var self = this;
+            self._overwrite = $(chkBox).prop("checked");
+        },
 
         setDirectory: function (newDir) {
             var self = this;
@@ -30,7 +37,14 @@ var UploadView = Backbone.View.extend({
         render: function () {
             var self = this;
 
-            self.$el.append(self._div);
+            // Reinitialize the 'overwrite' checkbox to false.
+            self._chkBox.prop("checked", false);
+
+            self._chkBox.bind("change", function () {
+                self._onCheckOverwriteChange.apply(self, [this]);
+            });
+
+            self.$el.append(self._chkDiv.add(self._div));
         },
 
         initialize: function () {
@@ -42,6 +56,20 @@ var UploadView = Backbone.View.extend({
                 .css("height", "200px")
                 .text("Drop files to upload or click for a dialog box");
 
+            // This quirky CSS should perhaps be moved in a .css file.
+
+            self._chkBox = $("<input></input>")
+                .attr("id", self._chkOverwriteId)
+                .attr("type", "checkbox")
+                .add($("<span></span>")
+                    .css("margin-left", "5px")
+                    .css("vertical-align", "top")
+                    .text("Overwrite files?"));
+
+            self._chkDiv = $("<div></div>")
+                .css("margin-bottom", "10px")
+                .append(self._chkBox);
+
             self._dz = new Dropzone(self._div.get(0), {
                 url: "/up",
                 maxFilesize: 1000000,
@@ -49,7 +77,9 @@ var UploadView = Backbone.View.extend({
 
                 init: function () {
                     this.on("processing", function () {
-                        this.options.url = "/up?p=" + encodeURIComponent(self._currentDir.get("path"));
+                        var p = encodeURIComponent(self._currentDir.get("path"));
+                        var o = self._overwrite ? "1" : "0";
+                        this.options.url = "/up?p=" + p + "&o=" + o;
                     });
                 }
             });

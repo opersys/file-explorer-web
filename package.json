@@ -8,14 +8,15 @@
     "dependencies": {
         "express": "*",
         "express-session": "*",
+        "express-busboy": "*",
         "serve-static": "*",
         "event-source-emitter": "*",
         "morgan": "*",
         "underscore": "*",
         "ws": "*",
         "unix-access": "*",
-        "jquery-file-upload-middleware": "*",
-        "mem-cache": "*"
+        "mem-cache": "*",
+        "fs-extra": "*"
     },
     "devDependencies": {
         "jade": "*",

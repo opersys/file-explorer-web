@@ -21,12 +21,16 @@ var exStatic = require("serve-static");
 var http = require("http");
 var path = require("path");
 var WebSocket = require("ws").Server;
-var upload = require("jquery-file-upload-middleware");
+var busboy = require("express-busboy");
 var spawn = require("child_process").spawn;
 var os = require("os");
 
 // Express application
 var app = express();
+busboy.extend(app, {
+    upload: true,
+    path: os.platform() == "android" ? "/data/local/tmp" : os.tmpdir()
+});
 
 // Routes;
 var fsroute = require("./routes/fs");
@@ -39,8 +43,6 @@ app.set("views", path.join(__dirname, "views"));
 app.use(exSession({ secret: 'la grippe' }));
 app.use(exStatic(path.join(__dirname, "public")));
 
-upload.configure({ uploadUrl: "/up" });
-
 // development only
 if ("development" == app.get("env"))
     app.use(exLogger("combined"));
@@ -52,14 +54,7 @@ app.get("/apropos", function (req, res) { res.redirect("/apropos.html"); });
 app.get("/fs/:part", fsroute.get);
 app.get("/fsev", fsroute.event);
 app.get("/dl", fsroute.dl);
-app.use("/up", function (req, res, next) {
-    upload.fileHandler({
-        tmpDir: os.platform() == "android" ? "/data/local/tmp" : os.tmpdir(),
-        uploadDir: function () {
-            return req.query.p;
-        }
-    })(req, res, next)
-});
+app.post("/up", fsroute.up);
 
 server.listen(app.get('port'), function() {});
 

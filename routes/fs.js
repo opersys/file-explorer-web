@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-var fs = require("fs");
+var _ = require("underscore");
+var fsx = require("fs-extra");
 var path = require("path");
 var eventSource = require("event-source-emitter");
-var _ = require("underscore");
 var access = require("../unix-access.js");
 var posix = require("../posix.js");
 var Inotify = require("../inotify.js").Inotify;
@@ -96,13 +96,13 @@ function ext2icon(filepath) {
 
     // Handle folders.
     try {
-        if (fs.statSync(filepath).isDirectory())
+        if (fsx.statSync(filepath).isDirectory())
             return path.join("icons", "_folder.png");
     } catch (ex) {
         return path.join("icons", "_blank.png");
     }
 
-    if (ext != "" && fs.existsSync(path.join("public", icon)))
+    if (ext != "" && fsx.existsSync(path.join("public", icon)))
         return icon;
     else
         // Default icon
@@ -117,7 +117,7 @@ function stat2json(filepath, fnadapter, filest) {
 
     if (!filest) {
         try {
-            filest = fs.statSync(filepath);
+            filest = fsx.statSync(filepath);
         } catch (ex) {
             filest = fnadapter({
                 path: filepath,
@@ -300,7 +300,7 @@ exports.dl = function (req, res) {
 
     if (req.query.p) {
         try {
-            fileDl = fs.createReadStream(req.query.p);
+            fileDl = fsx.createReadStream(req.query.p);
 
             res.set({
                 "Content-Disposition": "attachment; filename=" + path.basename(req.query.p)
@@ -312,6 +312,22 @@ exports.dl = function (req, res) {
 
         } catch (ex) {
         }
+    }
+};
+
+// Upload
+exports.up = function (req, res) {
+    if (req.files) {
+        _.each(req.files, function (file) {
+            var target = path.join(req.query.p, file.filename);
+
+            fsx.copy(file.file, target, function (err) {
+                if (err)
+                    res.end(500);
+                else
+                    res.end();
+            });
+        });
     }
 };
 
@@ -339,7 +355,7 @@ exports.get = function (req, res) {
     // No 'h' parameter means we just show all.
     showHidden = !(req.query.h && req.query.h == "0");
 
-    fs.readdir(rpath, function (err, files) {
+    fsx.readdir(rpath, function (err, files) {
         if (err) {
             fslist.push({
                 path: rpath,
@@ -352,7 +368,7 @@ exports.get = function (req, res) {
             var filest, filepath = path.join(rpath, file);
 
             try {
-                filest = fs.statSync(filepath);
+                filest = fsx.statSync(filepath);
             } catch (ex) {
                 fslist.push({
                     path: filepath,

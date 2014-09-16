@@ -321,6 +321,17 @@ exports.up = function (req, res) {
         _.each(req.files, function (file) {
             var target = path.join(req.query.p, file.filename);
 
+            // Handle overwrite.
+            if (req.query.o && req.query.o == "0") {
+                var postfix = "", idx = 0;
+
+                while (fsx.existsSync(target + postfix)) {
+                    postfix = ("." + (++idx));
+                }
+
+                target += postfix;
+            }
+
             fsx.copy(file.file, target, function (err) {
                 if (err)
                     res.end(500);

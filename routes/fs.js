@@ -324,8 +324,19 @@ exports.up = function (req, res) {
             fsx.copy(file.file, target, function (err) {
                 if (err)
                     res.end(500);
-                else
+                else {
+                    var tmpupdir = path.dirname(path.dirname(file.file));
+
+                    // Delete the temporary file created by the upload
+                    // middleware.
+                    try {
+                        fsx.remove(tmpupdir);
+                    } catch (ex) {
+                        console.log("Could not delete " + tmpupdir);
+                    }
+
                     res.end();
+                }
             });
         });
     }

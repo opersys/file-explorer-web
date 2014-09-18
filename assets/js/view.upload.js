@@ -37,24 +37,32 @@ var UploadView = Backbone.View.extend({
         render: function () {
             var self = this;
 
+            self.$el.append(self._chkDiv.add(self._div));
+
+            self._div
+                .css("width", "100%")
+                .css("height", self.$el.innerHeight() - self._chkDiv.outerHeight(true));
+
             // Reinitialize the 'overwrite' checkbox to false.
             self._chkBox.prop("checked", false);
 
             self._chkBox.bind("change", function () {
                 self._onCheckOverwriteChange.apply(self, [this]);
             });
-
-            self.$el.append(self._chkDiv.add(self._div));
         },
 
         initialize: function () {
             var self = this;
 
+            self._divMsg = $("<span></span>")
+                .attr("class", "dz-message")
+                .text("Drop files to upload or click for a dialog box");
+
             self._div = $("<div></div>")
                 .attr("id", self._uploadFieldId)
-                .css("width", "300px")
-                .css("height", "200px")
-                .text("Drop files to upload or click for a dialog box");
+                .attr("class", "dropzone")
+                .css("overflow", "auto")
+                .append(self._divMsg);
 
             // This quirky CSS should perhaps be moved in a .css file.
 
@@ -62,12 +70,12 @@ var UploadView = Backbone.View.extend({
                 .attr("id", self._chkOverwriteId)
                 .attr("type", "checkbox")
                 .add($("<span></span>")
-                    .css("margin-left", "5px")
+                    .css("padding-left", "5px")
                     .css("vertical-align", "top")
                     .text("Overwrite files?"));
 
             self._chkDiv = $("<div></div>")
-                .css("margin-bottom", "10px")
+                .css("padding", "10px")
                 .append(self._chkBox);
 
             self._dz = new Dropzone(self._div.get(0), {

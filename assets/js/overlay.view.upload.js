@@ -23,17 +23,20 @@ var UploadOverlay = Backbone.View.extend({
     render: function () {
         var self = this;
 
-        self._uploadGrid = $("<table></table>");
-        self._uploadDiv = $("<div></div>")
-            .attr("class", "dropzone");
+        // We can refer directly to the overlay object because
+        // w2ui allows for a single overlay at the time.
+        var overlay = $("#w2ui-overlay");
+
+        self._uploadDiv = $("<div></div>");
+        self.$el.append(self._uploadDiv);
+
+        self._uploadDiv
+            .css("width",  overlay.innerWidth())
+            .css("height", overlay.innerHeight());
         self._uploadObj = UploadView.get();
 
         self._uploadObj.setElement(self._uploadDiv);
         self._uploadObj.render();
-
-        self.$el
-            .append(self._uploadDiv)
-            .append(self._uploadGrid);
     },
 
     hide: function () {

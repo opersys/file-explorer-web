@@ -85,7 +85,7 @@ var FileSystemView = Backbone.View.extend({
         this.updateToolbar();
     },
 
-    showUploadOverlay: function () {
+    showUploadOverlay: function (width) {
         this._uploadOverlay = new UploadOverlay({
             el: $("#" + this._uploadOverlayId),
             dir: this._currentDir,
@@ -172,6 +172,7 @@ var FileSystemView = Backbone.View.extend({
                                 html: "<div id='" + self._uploadOverlayId + "'></div>",
                                 overlay: {
                                     width: 400,
+                                    height: 400,
                                     onShow: function () { self.showUploadOverlay(); },
                                     onHide: function () { self.hideUploadOverlay(); }
                                 }

@@ -22,13 +22,25 @@ a {
     color: #00B7FF;
 }
 
-xk.logcatview .slick-viewport .grid-canvas .slick-cell {
-    border: 1px white solid;
+div.loginbox {
+    width: 300px;
+    height: 200px;
+
+    position: absolute;
+    top:0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    margin: auto;
 }
 
-/* Hides the header column for logcat views. */
-.slickgrid-no-header .slick-header-columns {
-    height: 0px;
+div.loginlogo {
+    float: left;
+}
+
+div.loginform {
+    float: right;
 }
 
 /* SLICKGRID FORMATTING */

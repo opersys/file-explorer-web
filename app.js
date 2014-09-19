@@ -18,6 +18,8 @@ var express = require("express");
 var exSession = require("express-session");
 var exLogger = require("morgan");
 var exStatic = require("serve-static");
+var passport = require("passport");
+var LocalStrategy = require("passport-local").Strategy;
 var http = require("http");
 var path = require("path");
 var WebSocket = require("ws").Server;
@@ -32,6 +34,16 @@ busboy.extend(app, {
     path: os.platform() == "android" ? "/data/local/tmp" : os.tmpdir()
 });
 
+function ensureAuthenticated(req, res, next) {
+    if ("development" == app.get("env"))
+        return next();
+
+    if (req.isAuthenticated())
+        return next();
+
+    res.redirect('/login');
+}
+
 // Routes;
 var fsroute = require("./routes/fs");
 
@@ -41,26 +53,99 @@ app.set("views", path.join(__dirname, "views"));
 
 // Middlewares.
 app.use(exSession({ secret: 'la grippe' }));
-app.use(exStatic(path.join(__dirname, "public")));
+app.use(function (req, res, next) {
+    // Don't allow direct requests for .html files.
+    if (/\.html$/.test(req.path))
+        res.redirect("/");
+    else
+        next();
+});
 
-// development only
+// Authentication.
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(exStatic(path.join(__dirname, "public"), { index: false }));
+
+// Development only
 if ("development" == app.get("env"))
     app.use(exLogger("combined"));
 
 var server = http.createServer(app);
 
-app.get("/", function (req, res) { res.redirect("/index.html"); });
-app.get("/apropos", function (req, res) { res.redirect("/apropos.html"); });
-app.get("/fs/:part", fsroute.get);
-app.get("/fsev", fsroute.event);
-app.get("/dl", fsroute.dl);
-app.post("/up", fsroute.up);
+passport.use(new LocalStrategy(
+    function(username, password, done) {
+        if (app.get("password") == password)
+            return done(null, app.get("password"));
+        else
+            return done(null, false);
+    })
+);
 
-server.listen(app.get('port'), function() {});
+passport.serializeUser(function(pass, done) {
+    done(null, pass);
+});
+
+passport.deserializeUser(function(pass, done) {
+    if (pass != app.get("password"))
+        done("Failed to deserialize session");
+    else
+        done(null, pass);
+});
+
+//
+// Routes configuration.
+//
+
+app.get("/",
+    ensureAuthenticated,
+    function (req, res) { res.redirect("/index"); });
+
+// Static pages.
+app.get("/index",
+    ensureAuthenticated,
+    function (req, res) { res.sendFile("public/index.html", { root: process.cwd() }); });
+app.get("/apropos",
+    ensureAuthenticated,
+    function (req, res) { res.sendFile("public/apropos.html", { root: process.cwd() }); });
+
+// Login
+app.get("/login",
+    function (req, res) { res.sendFile("public/login.html", { root: process.cwd() }); });
+app.post("/login",
+    passport.authenticate('local', { failureRedirect: "/login" }),
+    function (req, res) {
+        res.redirect("/index");
+    });
+
+// API
+app.get("/fs/:part",
+    ensureAuthenticated,
+    fsroute.get);
+app.get("/fsev",
+    ensureAuthenticated,
+    fsroute.event);
+app.get("/dl",
+    ensureAuthenticated,
+    fsroute.dl);
+app.post("/up",
+    ensureAuthenticated,
+    fsroute.up);
+
+server.listen(app.get("port"), function() {});
 
 // Handle receiving the "quit" command from the UI.
 process.stdin.on("data", function (chunk) {
-    if (chunk.toString().split("\n")[0].trim().toLowerCase() == "quit")
+    var cmd, params, cs;
+
+    cs = chunk.toString().split("\n")[0].trim().split(" ");
+    cmd = cs.shift().toLowerCase();
+    params = cs;
+
+    if (cmd == "quit")
         process.exit();
+    else if (cmd == "pass")
+        app.set("password", params[0]);
+    else
+        console.log("Unknown command: " + cmd)
 });
 

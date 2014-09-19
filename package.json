@@ -9,6 +9,8 @@
         "express": "*",
         "express-session": "*",
         "express-busboy": "*",
+        "passport": "*",
+        "passport-local": "*",
         "serve-static": "*",
         "event-source-emitter": "*",
         "morgan": "*",

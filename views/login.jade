@@ -18,6 +18,8 @@ html
 		title File Explorer - Login
 		link(rel="stylesheet", href="css/file-explorer_styles.css")
 		link(rel="stylesheet", href="css/font-awesome.min.css")
+		script(text="text/javascript", src="/js/file-explorer_libs.js")
+		script(text="text/javascript", src="/js/file-explorer_login.js")
 	body
 		div.loginbox
 			div.loginlogo
@@ -32,5 +34,6 @@ html
 					input(type="hidden", name="username", value="foo")
 					input(type="password", name="password", placeholder="password")
 					input(type="submit", value="log in")
+			div#loginerror.loginerror
 
 

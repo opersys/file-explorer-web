@@ -24,11 +24,13 @@ var http = require("http");
 var path = require("path");
 var WebSocket = require("ws").Server;
 var busboy = require("express-busboy");
+var flash = require("connect-flash");
 var spawn = require("child_process").spawn;
 var os = require("os");
 
 // Express application
 var app = express();
+
 busboy.extend(app, {
     upload: true,
     path: os.platform() == "android" ? "/data/local/tmp" : os.tmpdir()
@@ -62,11 +64,14 @@ app.use(function (req, res, next) {
 });
 
 // Authentication.
+app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
+
+// Static files.
 app.use(exStatic(path.join(__dirname, "public"), { index: false }));
 
-// Development only
+// Logging: enabled in development only
 if ("development" == app.get("env"))
     app.use(exLogger("combined"));
 
@@ -76,8 +81,9 @@ passport.use(new LocalStrategy(
     function(username, password, done) {
         if (app.get("password") == password)
             return done(null, app.get("password"));
-        else
-            return done(null, false);
+        else {
+            return done(null, false, { message: "Invalid password" });
+        }
     })
 );
 
@@ -110,9 +116,13 @@ app.get("/apropos",
 
 // Login
 app.get("/login",
-    function (req, res) { res.sendFile("public/login.html", { root: process.cwd() }); });
+    function (req, res) {
+        res.cookie("error", req.flash("error"));
+        res.sendFile("public/login.html", { root: process.cwd() });
+    }
+);
 app.post("/login",
-    passport.authenticate('local', { failureRedirect: "/login" }),
+    passport.authenticate('local', { failureRedirect: "/login", failureFlash: true }),
     function (req, res) {
         res.redirect("/index");
     });

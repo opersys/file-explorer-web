@@ -36,11 +36,13 @@ div.loginbox {
 }
 
 div.loginlogo {
-    float: left;
 }
 
 div.loginform {
-    float: right;
+}
+
+div.loginerror {
+    color: red;
 }
 
 /* SLICKGRID FORMATTING */

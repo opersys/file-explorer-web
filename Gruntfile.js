@@ -120,6 +120,7 @@ module.exports = function (grunt) {
                     "assets/jslib/slickgrid/plugins/slick.cellselectionmodel.js",
                     "assets/jslib/slickgrid/plugins/slick.cellrangeselector.js",
                     "assets/jslib/slickgrid/plugins/slick.rowselectionmodel.js",
+                    "assets/jslib/jquery.cookie.js",
                     "assets/jslib/dropzone.js"
                 ],
                 dest: "dist/public/js/<%= pkg.name %>_libs.js"
@@ -149,6 +150,18 @@ module.exports = function (grunt) {
                     "assets/js/fs.js"
                 ],
                 dest: "dist/public/js/<%= pkg.name %>_main.js"
+            },
+            dist_login: {
+                options: {
+                    process: function(src, filepath) {
+                        return '//####' + filepath + '\n' + src;
+                    },
+                    nonull: true
+                },
+                src: [
+                    "assets/js/login.js"
+                ],
+                dest: "dist/public/js/<%= pkg.name %>_login.js"
             }
         },
 

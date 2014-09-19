@@ -9,6 +9,7 @@
         "express": "*",
         "express-session": "*",
         "express-busboy": "*",
+        "connect-flash": "*",
         "passport": "*",
         "passport-local": "*",
         "serve-static": "*",

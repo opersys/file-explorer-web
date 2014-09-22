@@ -128,18 +128,11 @@ app.post("/login",
     });
 
 // API
-app.get("/fs/:part",
-    ensureAuthenticated,
-    fsroute.get);
-app.get("/fsev",
-    ensureAuthenticated,
-    fsroute.event);
-app.get("/dl",
-    ensureAuthenticated,
-    fsroute.dl);
-app.post("/up",
-    ensureAuthenticated,
-    fsroute.up);
+app.get("/fs/:part", ensureAuthenticated, fsroute.get);
+app.get("/fsev", ensureAuthenticated, fsroute.event);
+app.get("/dl", ensureAuthenticated, fsroute.dl);
+app.post("/up", ensureAuthenticated, fsroute.up);
+app.post("/rm", ensureAuthenticated, fsroute.rm);
 
 server.listen(app.get("port"), function() {});
 

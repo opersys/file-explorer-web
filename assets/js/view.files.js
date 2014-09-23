@@ -80,6 +80,10 @@ var FilesView = Backbone.View.extend({
         });
     },
 
+    clearSelection: function () {
+        this._filesGrid.setSelectedRows([]);
+    },
+
     _setFilesystemEventCount: function (n) {
         $("#" + this._eventInfoId)
             .text("Filesystem events: " + n + " " + Humanize.pluralize(n, "event", "events"));

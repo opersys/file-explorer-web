@@ -117,7 +117,13 @@ var FileSystemView = Backbone.View.extend({
             w2ui["fs_view_layout"].get("main").toolbar.enable("btnUpload");
         }
 
-        if (this._selectedFiles.length == 1 && this._selectedFiles[0].get("canWrite"))
+        var enableDelete = false;
+
+        _.each(this._selectedFiles, function (selectedFile) {
+            enableDelete |= selectedFile.get("canWrite");
+        });
+
+        if (enableDelete)
             w2ui["fs_view_layout"].get("main").toolbar.enable("btnDelete");
     },
 
@@ -125,6 +131,32 @@ var FileSystemView = Backbone.View.extend({
         _.each(this._selectedFiles, function (file) {
             window.open("/dl?p=" + encodeURIComponent(file.get("path")), "_self");
         });
+    },
+
+    deleteSelectedFiles: function () {
+        var self = this;
+
+        // The DeletePopup will call the code inside the 'action'
+        // callback if the users confirm deletion of the files.
+        if (self._options.getOptionValue("confirmDelete")) {
+            new DeletePopup({
+                options: self._options,
+                files: self._selectedFiles,
+                action: function (files) {
+                    _.each(files, function (file) {
+                        file.destroy();
+                    });
+                }
+            }).render();
+        }
+        // No confirmation needed.
+        else {
+            _.each(self._selectedFiles, function (file) {
+                file.destroy();
+            });
+        }
+
+        self._filesSView.clearSelection();
     },
 
     initialize: function (opts) {
@@ -181,6 +213,9 @@ var FileSystemView = Backbone.View.extend({
                         onClick: function (ev) {
                             if (ev.target == "btnDownload")
                                 self.downloadSelectedFiles();
+
+                            if (ev.target == "btnDelete")
+                                self.deleteSelectedFiles();
                         }
                     }
                 }

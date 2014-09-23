@@ -22,7 +22,7 @@ var OptionsOverlay = Backbone.View.extend({
 
     render: function () {
         var self = this;
-        var ul, optHiddenLi, overlayDiv;
+        var ul, optHiddenLi, optConfirmLi, overlayDiv;
 
         overlayDiv = this.$el;
         overlayDiv.css("margin", "1em");
@@ -41,7 +41,20 @@ var OptionsOverlay = Backbone.View.extend({
                 $("<label></label>")
                     .attr("for", "optShowHidden")
                     .text("Show hidden files"));
+        optConfirmLi = $("<li></li>")
+            .append(
+                $("<input></input>")
+                    .attr("type", "checkbox")
+                    .attr("name", "optConfirmDelete")
+                    .attr("checked", self._options.getOptionValue("confirmDelete"))
+                    .on("change", function () {
+                        self._options.setOptionValue("confirmDelete", $(this).prop("checked"));
+                    }))
+            .append(
+                $("<label></label>")
+                    .attr("for", "optConfirmDelete")
+                    .text("Confirm file removal"));
 
-        overlayDiv.append(optHiddenLi);
+        overlayDiv.append([optHiddenLi, optConfirmLi]);
     }
 });

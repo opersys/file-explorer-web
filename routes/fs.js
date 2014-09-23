@@ -410,3 +410,18 @@ exports.get = function (req, res) {
         res.json(fslist);
     });
 };
+
+// Delete (POST)
+exports.rm = function (req, res) {
+    if (!req.query.f)
+        res.end(500, "Argument error. No files provided");
+
+    else {
+        fsx.unlink(req.query.f, function (err) {
+            if (err)
+                res.end(500, "Delete error: " + err);
+            else
+                res.end();
+        });
+    }
+};

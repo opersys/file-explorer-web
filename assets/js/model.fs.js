@@ -15,7 +15,22 @@
  */
 
 var File = Backbone.Model.extend({
-    idAttribute: "name"
+    idAttribute: "name",
+
+    sync: function (method, model, options) {
+        if (method == "read")
+            return Backbone.sync.apply(this, arguments);
+
+        if (method == "create" || method == "patch" || method == "update")
+            throw "Method " + method + " unsupported";
+
+        if (method == "delete") {
+            $.ajax({
+                type: "POST",
+                url: "/rm?f=" + encodeURIComponent(model.get("path"))
+            });
+        }
+    }
 });
 
 var Files = Backbone.Collection.extend({

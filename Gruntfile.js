@@ -136,6 +136,7 @@ module.exports = function (grunt) {
                     "assets/js/model.options.js",
                     "assets/js/model.fs.js",
                     "assets/js/model.events.js",
+                    "assets/js/popup.view.delete.js",
                     "assets/js/overlay.view.columns.js",
                     "assets/js/overlay.view.options.js",
                     "assets/js/overlay.view.errors.js",

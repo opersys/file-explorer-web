@@ -133,6 +133,7 @@ app.get("/fsev", ensureAuthenticated, fsroute.event);
 app.get("/dl", ensureAuthenticated, fsroute.dl);
 app.post("/up", ensureAuthenticated, fsroute.up);
 app.post("/rm", ensureAuthenticated, fsroute.rm);
+app.post("/mv", ensureAuthenticated, fsroute.mv);
 
 server.listen(app.get("port"), function() {});
 

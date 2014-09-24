@@ -115,6 +115,7 @@ module.exports = function (grunt) {
                        JQuery UI distribution. Just the bare minimum was included. */
                     "assets/jslib/jquery-ui.min.js",
                     "assets/jslib/slickgrid/slick.core.js",
+                    "assets/jslib/slickgrid/slick.editors.js",
                     "assets/jslib/slickgrid/slick.grid.js",
                     "assets/jslib/slickgrid/slick.formatters.js",
                     "assets/jslib/slickgrid/plugins/slick.cellselectionmodel.js",
@@ -133,10 +134,12 @@ module.exports = function (grunt) {
                     nonull: true
                 },
                 src: [
+                    "assets/js/backbone.slickeditor.js",
                     "assets/js/model.options.js",
                     "assets/js/model.fs.js",
                     "assets/js/model.events.js",
                     "assets/js/popup.view.delete.js",
+                    "assets/js/popup.view.createdir.js",
                     "assets/js/overlay.view.columns.js",
                     "assets/js/overlay.view.options.js",
                     "assets/js/overlay.view.errors.js",

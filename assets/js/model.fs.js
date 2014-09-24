@@ -18,17 +18,37 @@ var File = Backbone.Model.extend({
     idAttribute: "name",
 
     sync: function (method, model, options) {
+        // Fall back to the default apply method for read requests.
         if (method == "read")
             return Backbone.sync.apply(this, arguments);
 
-        if (method == "create" || method == "patch" || method == "update")
-            throw "Method " + method + " unsupported";
+        // The following methods go through special endpoints.
 
         if (method == "delete") {
             $.ajax({
                 type: "POST",
                 url: "/rm?f=" + encodeURIComponent(model.get("path"))
             });
+        }
+
+        if (method == "update") {
+            // We can only handle file name changes for now.
+            if (model.hasChanged("name")) {
+                var from = encodeURIComponent(model.get("path"));
+                var to = encodeURIComponent(model.get("name"));
+
+                Backbone.ajax(_.extend({
+                    type: "POST",
+                    url: "/mv?f=" + from + "&n=" + to
+                }, options));
+            }
+            else throw "Unsupported model change";
+        }
+
+        // And those are unsupported.
+
+        if (method == "create" || method == "patch") {
+            throw "Method " + method + " unsupported";
         }
     }
 });

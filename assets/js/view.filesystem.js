@@ -156,7 +156,16 @@ var FileSystemView = Backbone.View.extend({
             });
         }
 
-        self._filesSView.clearSelection();
+        self._filesView.clearSelection();
+    },
+
+    createDirectory: function () {
+        new CreateDirectoryPopup({
+            options: self._options,
+            targetDirectory: self._currentDir,
+            action: function (files) {
+            }
+        }).render();
     },
 
     initialize: function (opts) {
@@ -193,7 +202,7 @@ var FileSystemView = Backbone.View.extend({
                             },
                             { type: "spacer" },
                             { hint: "New folder",
-                                type: "button", id: "btnNew", icon: "icon-file-alt" },
+                                type: "button", id: "btnNewDirectory", icon: "icon-file-alt" },
                             { hint: "Delete file",
                                 type: "button", id: "btnDelete", icon: "icon-remove" },
                             { hint: "Download selected file",
@@ -216,6 +225,9 @@ var FileSystemView = Backbone.View.extend({
 
                             if (ev.target == "btnDelete")
                                 self.deleteSelectedFiles();
+
+                            if (ev.target == "btnNewDirectory")
+                                self.createDirectory();
                         }
                     }
                 }

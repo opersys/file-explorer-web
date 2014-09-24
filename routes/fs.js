@@ -414,7 +414,7 @@ exports.get = function (req, res) {
 // Delete (POST)
 exports.rm = function (req, res) {
     if (!req.query.f)
-        res.end(500, "Argument error. No files provided");
+        res.end(500, "Argument error. No files provided.");
 
     else {
         fsx.unlink(req.query.f, function (err) {
@@ -423,5 +423,52 @@ exports.rm = function (req, res) {
             else
                 res.end();
         });
+    }
+};
+
+// Mkdir (POST)
+exports.mkdir = function (req, res) {
+    if (!req.query.f)
+        res.end(500, "Argument error. No pathname provided.");
+
+    else {
+        fsx.mkdir(req.query.f, function (err) {
+            if (err)
+                res.end(500, "Mkdir error: " + err);
+            else
+                res.end();
+        });
+    }
+};
+
+// Move (POST)
+exports.mv = function (req, res) {
+    if (!req.query.f)
+        res.end(500, "Argument error. Missing initial path name.");
+    else if (!(req.query.t || req.query.n))
+        res.end(500, "Argument error. Missing target path name or new file name.");
+    else {
+        // This is for changing the base name of the target file.
+        if (req.query.n) {
+            var newname = path.join(path.dirname(req.query.f), req.query.n);
+            console.log("New file path " + newname);
+            fsx.move(req.query.f, newname, function (err) {
+                console.log("File " + req.query.f + " was moved to " + newname);
+
+                if (err)
+                    res.end(500, "Move error: " + err);
+                else
+                    res.end();
+            });
+        }
+        // Direct path to path move.
+        else if (req.query.t) {
+            fsx.move(req.query.f, req.query.t, function (err) {
+                if (err)
+                    res.end(500, "Move error: " + err);
+                else
+                    res.end();
+            });
+        }
     }
 };

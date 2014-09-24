@@ -32,7 +32,9 @@ var FileListView = Backbone.View.extend({
             enableColumnReorder: true,
             enableCellNavigation: true,
             forceFitColumns: true,
-            enableAsyncPostRender: true
+            enableAsyncPostRender: true,
+            editable: true,
+            autoEdit: false
         },
 
         // This is the actual list of columns passed to SlickGrid.
@@ -128,7 +130,7 @@ var FileListView = Backbone.View.extend({
 
         _onDblClick: function (args) {
             var dataItem = this._filesGrid.getDataItem(args.row);
-            this.trigger("filelistview:ondoubleclickaction", dataItem)
+            //this.trigger("filelistview:ondoubleclickaction", dataItem)
         },
 
         _onSelectedRangeChanged: function (args) {
@@ -272,7 +274,7 @@ var FileListView = Backbone.View.extend({
             },
             "name": {
                 optionName: "File name", id: "name", name: "Name", field: "name",
-                sortable: true
+                sortable: true, editor: BackboneTextEditor
             },
             "username": {
                 optionName: "Owner username", id: "username", name: "User", field: "username",

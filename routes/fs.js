@@ -334,7 +334,7 @@ exports.up = function (req, res) {
 
             fsx.copy(file.file, target, function (err) {
                 if (err)
-                    res.end(500);
+                    res.status(500).end();
                 else {
                     var tmpupdir = path.dirname(path.dirname(file.file));
 
@@ -414,12 +414,12 @@ exports.get = function (req, res) {
 // Delete (POST)
 exports.rm = function (req, res) {
     if (!req.query.f)
-        res.end(500, "Argument error. No files provided.");
+        res.status(500).end("Argument error. No files provided.");
 
     else {
         fsx.unlink(req.query.f, function (err) {
             if (err)
-                res.end(500, "Delete error: " + err);
+                res.status(500).end("Delete error: " + err);
             else
                 res.end();
         });
@@ -429,12 +429,12 @@ exports.rm = function (req, res) {
 // Mkdir (POST)
 exports.mkdir = function (req, res) {
     if (!req.query.f)
-        res.end(500, "Argument error. No pathname provided.");
+        res.status(500).end("Argument error. No pathname provided.");
 
     else {
         fsx.mkdir(req.query.f, function (err) {
             if (err)
-                res.end(500, "Mkdir error: " + err);
+                res.status(500).end("Mkdir error: " + err);
             else
                 res.end();
         });
@@ -444,9 +444,9 @@ exports.mkdir = function (req, res) {
 // Move (POST)
 exports.mv = function (req, res) {
     if (!req.query.f)
-        res.end(500, "Argument error. Missing initial path name.");
+        res.status(500).end("Argument error. Missing initial path name.");
     else if (!(req.query.t || req.query.n))
-        res.end(500, "Argument error. Missing target path name or new file name.");
+        res.status(500).end("Argument error. Missing target path name or new file name.");
     else {
         // This is for changing the base name of the target file.
         if (req.query.n) {
@@ -456,7 +456,7 @@ exports.mv = function (req, res) {
                 console.log("File " + req.query.f + " was moved to " + newname);
 
                 if (err)
-                    res.end(500, "Move error: " + err);
+                    res.status(500).end("Move error: " + err);
                 else
                     res.end();
             });
@@ -465,7 +465,7 @@ exports.mv = function (req, res) {
         else if (req.query.t) {
             fsx.move(req.query.f, req.query.t, function (err) {
                 if (err)
-                    res.end(500, "Move error: " + err);
+                    res.status(500).end("Move error: " + err);
                 else
                     res.end();
             });

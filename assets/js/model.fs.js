@@ -42,7 +42,6 @@ var File = Backbone.Model.extend({
                     url: "/mv?f=" + from + "&n=" + to
                 }, options));
             }
-            else throw "Unsupported model change";
         }
 
         // And those are unsupported.

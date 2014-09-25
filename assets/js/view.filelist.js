@@ -55,7 +55,8 @@ var FileListView = Backbone.View.extend({
         _initializeGrid: function () {
             var self = this;
 
-            self._filesGrid = new Slick.Grid(self.$el, self._files, self._columns, self._filesOptions);
+            self._filesGrid = new Slick.Grid(self.$el, self._files, self._columns,
+                _.extend({ editCommandHandler: self._getEditCommandHandler() }, self._filesOptions));
 
             self._filesGrid.setSelectionModel(new Slick.RowSelectionModel());
 
@@ -105,6 +106,28 @@ var FileListView = Backbone.View.extend({
             });
         },
 
+        // Edit command handler.
+        _getEditCommandHandler: function () {
+            var self = this;
+
+            return function (model, column, editCommand) {
+                if (self._options.getOptionValue("confirmRename")) {
+                    new RenamePopup({
+                        from: model.get("name"),
+                        to: editCommand.serializedValue,
+                        options: self._options,
+                        cancel: function () {
+                            editCommand.undo();
+                        },
+                        confirm: function () {
+                            editCommand.execute();
+                        }
+                    }).render();
+                }
+                else editCommand.execute();
+            }
+        },
+
         // Grid events.
 
         _onColumnReordered: function (args) {
@@ -135,7 +158,7 @@ var FileListView = Backbone.View.extend({
 
         _onSelectedRangeChanged: function (args) {
             var self = this;
-            var r, files = [];
+            var files = [];
 
             _.each(args, function (range) {
                 for (var r = range.fromRow; r <= range.toRow; r++)

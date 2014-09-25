@@ -142,8 +142,8 @@ var FileSystemView = Backbone.View.extend({
             new DeletePopup({
                 options: self._options,
                 files: self._selectedFiles,
-                action: function (files) {
-                    _.each(files, function (file) {
+                confirm: function () {
+                    _.each(self._selectedFiles, function (file) {
                         file.destroy();
                     });
                 }

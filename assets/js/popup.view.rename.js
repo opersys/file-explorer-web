@@ -14,22 +14,26 @@
  * limitations under the License.
  */
 
-var DeletePopup = ConfirmPopup.extend({
+var RenamePopup = ConfirmPopup.extend({
 
     initialize: function (options) {
         ConfirmPopup.prototype.initialize.apply(this, [options]);
 
-        this._files = options.files;
-        this.title = "Confirm file removal";
-        this.confirmOption = "confirmDelete";
-        this.confirmOptionText = "Always confirm removal";
+        this._to = options.to;
+        this._from = options.from;
+
+        this.title = "Confirm rename";
+        this.confirmOption = "confirmRename";
+        this.confirmOptionText = "Always confirm rename";
     },
 
     renderBody: function ($body) {
         var self = this;
         var filelist = $("<ul></ul>");
 
-        $body.text("The following files will be removed:");
+        $body.text("The following file will be renamed:");
+        $body.append(
+            $("<div></div>").text(this._from + " to " + this._to));
 
         _.each(self._files, function (file) {
             filelist.append($("<li></li>").text(file.get("name")));

@@ -146,6 +146,8 @@ var FileSystemView = Backbone.View.extend({
                     _.each(self._selectedFiles, function (file) {
                         file.destroy();
                     });
+
+                    self._filesView.clearSelection();
                 }
             }).render();
         }
@@ -154,9 +156,9 @@ var FileSystemView = Backbone.View.extend({
             _.each(self._selectedFiles, function (file) {
                 file.destroy();
             });
-        }
 
-        self._filesView.clearSelection();
+            self._filesView.clearSelection();
+        }
     },
 
     createDirectory: function () {

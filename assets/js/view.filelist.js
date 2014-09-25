@@ -190,6 +190,10 @@ var FileListView = Backbone.View.extend({
 
         // Methods.
 
+        clearSelection: function () {
+            this._filesGrid.setSelectedRows([]);
+        },
+
         getSelectedFiles: function () {
             var self = this;
 

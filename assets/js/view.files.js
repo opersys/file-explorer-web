@@ -81,7 +81,7 @@ var FilesView = Backbone.View.extend({
     },
 
     clearSelection: function () {
-        this._filesGrid.setSelectedRows([]);
+        this._filelistView.clearSelection();
     },
 
     _setFilesystemEventCount: function (n) {

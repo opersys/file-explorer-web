@@ -29,6 +29,9 @@ var inotify = new Inotify();
 //
 var renameCache = new Cache();
 
+//
+var evTrap = {};
+
 var _adapters = {
     jstree: function (stat) {
         var r, isBad;
@@ -247,7 +250,6 @@ exports.event = function (req, res) {
                     renameCache.set(event.cookie, event.name, 1000);
 
                 if (event.mask & Inotify.IN_MOVED_TO) {
-
                     var oldName = renameCache.get(event.cookie);
 
                     if (oldName) {
@@ -273,12 +275,16 @@ exports.event = function (req, res) {
 
                 if (evType && evType != "delete") {
                     try {
-                        evWrapper.eventSource.emit(evType, {
-                            path: fpath,
-                            stat: stat2json(fpath)
-                        });
+                        var evData = stat2json(fpath);
+
+                        if (evTrap[fpath]) {
+                            evTrap[fpath].apply(this, [evData]);
+                            delete evTrap[fpath];
+                        }
+
+                        evWrapper.eventSource.emit(evType, evData);
                     } catch (ex) {
-                        console.log("Stat call failed in '" + evType + "' event: " + fpath);
+                        console.log("Stat call failed in '" + evType + "' event: " + fpath + ", exception: " + ex);
                     }
                 }
                 // We don't have the full stat for the delete event but at least
@@ -286,7 +292,7 @@ exports.event = function (req, res) {
                 else if (evType && evType == "delete") {
                     evWrapper.eventSource.emit("delete", {
                         path: fpath,
-                        stat: { name: path.basename(fpath) }
+                        name: path.basename(fpath)
                     });
                 }
             }
@@ -428,11 +434,17 @@ exports.rm = function (req, res) {
 
 // Mkdir (POST)
 exports.mkdir = function (req, res) {
-    if (!req.query.f)
+    if (!req.query.p)
         res.status(500).end("Argument error. No pathname provided.");
 
     else {
-        fsx.mkdir(req.query.f, function (err) {
+        // Pass a flag back to the client saying the directory that
+        // was just created has been created with an mkdir command.
+        evTrap[req.query.p] = function (evData) {
+            evData.isMkdir = true;
+        };
+
+        fsx.mkdir(req.query.p, function (err) {
             if (err)
                 res.status(500).end("Mkdir error: " + err);
             else
@@ -447,6 +459,7 @@ exports.mv = function (req, res) {
         res.status(500).end("Argument error. Missing initial path name.");
     else if (!(req.query.t || req.query.n))
         res.status(500).end("Argument error. Missing target path name or new file name.");
+
     else {
         // This is for changing the base name of the target file.
         if (req.query.n) {

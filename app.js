@@ -134,6 +134,7 @@ app.get("/dl", ensureAuthenticated, fsroute.dl);
 app.post("/up", ensureAuthenticated, fsroute.up);
 app.post("/rm", ensureAuthenticated, fsroute.rm);
 app.post("/mv", ensureAuthenticated, fsroute.mv);
+app.post("/mkdir", ensureAuthenticated, fsroute.mkdir);
 
 server.listen(app.get("port"), function() {});
 

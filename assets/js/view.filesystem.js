@@ -161,13 +161,8 @@ var FileSystemView = Backbone.View.extend({
         }
     },
 
-    createDirectory: function () {
-        new CreateDirectoryPopup({
-            options: self._options,
-            targetDirectory: self._currentDir,
-            action: function (files) {
-            }
-        }).render();
+    createDirectory: function (dirname) {
+        this._filesView.createDirectory(dirname);
     },
 
     initialize: function (opts) {

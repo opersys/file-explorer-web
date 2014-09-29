@@ -29,6 +29,8 @@ var File = Backbone.Model.extend({
                 type: "POST",
                 url: "/rm?f=" + encodeURIComponent(model.get("path"))
             });
+
+            return;
         }
 
         if (method == "update") {
@@ -42,11 +44,29 @@ var File = Backbone.Model.extend({
                     url: "/mv?f=" + from + "&n=" + to
                 }, options));
             }
+
+            return;
+        }
+
+        if (method == "create") {
+            // The only thing we create is a
+            if (model.get("isDir")) {
+                Backbone.ajax(_.extend({
+                    type: "POST",
+                    url: "/mkdir?p=" + encodeURIComponent(model.get("path"))
+                }));
+
+                // Immediately destroy the model since it'll appear by itsef as a newly
+                // created directory inside an event sent by the server side.
+                model.destroy();
+            }
+
+            return;
         }
 
         // And those are unsupported.
 
-        if (method == "create" || method == "patch") {
+        if (method == "patch") {
             throw "Method " + method + " unsupported";
         }
     }
@@ -55,7 +75,7 @@ var File = Backbone.Model.extend({
 var Files = Backbone.Collection.extend({
     model: File,
 
-    url: function() {
+    url: function () {
         return "/fs/files?p=" + this._rootPath;
     },
 
@@ -115,7 +135,7 @@ var Files = Backbone.Collection.extend({
 
             console.log("Created: " + data.path);
 
-            self.add(data.stat);
+            self.add(data, {merge: true});
         });
 
         this._ev.addEventListener("delete", function (ev) {
@@ -123,7 +143,7 @@ var Files = Backbone.Collection.extend({
 
             console.log("Deleted: " + data.path);
 
-            self.remove(data.stat.name);
+            self.remove(data.name);
         });
 
         this._ev.addEventListener("modify", function (ev) {
@@ -131,7 +151,7 @@ var Files = Backbone.Collection.extend({
 
             console.log("Modified: " + data.path);
 
-            self.get(data.stat.name).set(data.stat);
+            self.get(data.name).set(data);
         });
 
         this._ev.addEventListener("rename", function (ev) {
@@ -139,7 +159,7 @@ var Files = Backbone.Collection.extend({
 
             console.log("Renamed: " + data.path);
 
-            self.get(data.oldName).set(data.stat);
+            self.get(data.oldName).set(data);
         });
     },
 

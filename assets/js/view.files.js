@@ -52,6 +52,10 @@ var FilesView = Backbone.View.extend({
             self.openDirectory(self._currentDir);
     },
 
+    createDirectory: function () {
+        this._filelistView.createDirectory();
+    },
+
     openDirectory: function (dir) {
         var self = this, sortInfo;
 

@@ -190,6 +190,27 @@ var FileListView = Backbone.View.extend({
 
         // Methods.
 
+        createDirectory: function () {
+            var self = this;
+            var newdir = new File();
+            var idx = 0;
+            var actualName, defaultName = "New Directory";
+
+            actualName = defaultName;
+
+            // Try to find a safe filename.
+            while (self._files.get(actualName) != null) {
+                actualName = defaultName + "." + ++idx;
+            }
+
+            newdir.set("path", self._currentDir.get("path") + "/" + actualName);
+            newdir.set("isDir", true);
+
+            self._files.add(newdir);
+
+            newdir.save();
+        },
+
         clearSelection: function () {
             this._filesGrid.setSelectedRows([]);
         },
@@ -200,6 +221,15 @@ var FileListView = Backbone.View.extend({
             return _.map(this._filesGrid.getSelectedRows(), function (r) {
                 return self._filesGrid.getDataItem(r);
             });
+        },
+
+        getColumnPos: function (colId) {
+            var self = this;
+            var colMap = _.map(this._columns, function (col) {
+                return col.id;
+            });
+
+            return _.indexOf(colMap, colId);
         },
 
         setColumns: function (columnsIds) {
@@ -229,7 +259,7 @@ var FileListView = Backbone.View.extend({
             self._filesGrid.setData(self._files);
             self._filesGrid.render();
 
-            self._files.on("add", function () {
+            self._files.on("add", function (model) {
                 self._filesGrid.invalidate();
                 self._filesGrid.updateRowCount();
 
@@ -237,6 +267,18 @@ var FileListView = Backbone.View.extend({
                 self._filesGrid.resizeCanvas();
 
                 self._filesGrid.render();
+
+                // If the new model is the result of a directory creation, immediately
+                // make the corresponding name editable.
+                if (model.get("isMkdir")) {
+                    var rowNo = self._files.indexOf(model);
+                    var colNo = self.getColumnPos("name");
+
+                    if (colNo > 0) {
+                        self._filesGrid.setActiveCell(rowNo, colNo);
+                        self._filesGrid.editActiveCell();
+                    }
+                }
             });
 
             self._files.on("remove", function () {

@@ -30,13 +30,7 @@ var File = Backbone.Model.extend({
         if (method == "delete") {
             Backbone.ajax(_.extend(options, {
                 type: "POST",
-                url: "/rm?f=" + encodeURIComponent(model.get("path")),
-                error: function () {
-                    console.log("DELETE ERROR");
-
-                    if (errorCb)
-                        errorCb.apply(self, arguments);
-                }
+                url: "/rm?f=" + encodeURIComponent(model.get("path"))
             }));
 
             return;
@@ -50,13 +44,7 @@ var File = Backbone.Model.extend({
 
                 Backbone.ajax(_.extend(options, {
                     type: "POST",
-                    url: "/mv?f=" + from + "&n=" + to,
-                    error: function () {
-                        console.log("RENAME ERROR");
-
-                        if (errorCb)
-                            errorCb.apply(self, arguments);
-                    }
+                    url: "/mv?f=" + from + "&n=" + to
                 }));
             }
 
@@ -68,13 +56,7 @@ var File = Backbone.Model.extend({
             if (model.get("isDir")) {
                 Backbone.ajax(_.extend(options, {
                     type: "POST",
-                    url: "/mkdir?p=" + encodeURIComponent(model.get("path")),
-                    error: function () {
-                        console.log("CREATE ERROR");
-
-                        if (errorCb)
-                            errorCb.apply(self, arguments);
-                    }
+                    url: "/mkdir?p=" + encodeURIComponent(model.get("path"))
                 }));
 
                 // Immediately destroy the model since it'll appear by itsef as a newly

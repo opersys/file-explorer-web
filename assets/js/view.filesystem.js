@@ -144,7 +144,13 @@ var FileSystemView = Backbone.View.extend({
                 files: self._selectedFiles,
                 confirm: function () {
                     _.each(self._selectedFiles, function (file) {
-                        file.destroy();
+                        // The wait argument ensures that Backbone will;
+                        // wait for the return of the server call before
+                        // removing the object from the collection. This
+                        // is required since a delete operation might fail and
+                        // we want the model to receive the error event
+                        // instead of being removed immediately.
+                        file.destroy({ wait: true });
                     });
 
                     self._filesView.clearSelection();
@@ -154,7 +160,7 @@ var FileSystemView = Backbone.View.extend({
         // No confirmation needed.
         else {
             _.each(self._selectedFiles, function (file) {
-                file.destroy();
+                file.destroy({ wait: true });
             });
 
             self._filesView.clearSelection();

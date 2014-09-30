@@ -23,6 +23,17 @@ var FilesView = Backbone.View.extend({
         this._filelistView.refresh();
     },
 
+    _onFilesFatalError: function (serverMsg) {
+        var self = this;
+
+        new ServerMessagePopup({
+            serverMsg: serverMsg,
+            msg: "The backend reported the following error"
+        }).render();
+
+        self.openDirectory(self._currentDir);
+    },
+
     _onFileSelected: function (files) {
         this.trigger("filesview:onfilesselected", files);
     },
@@ -72,6 +83,10 @@ var FilesView = Backbone.View.extend({
             showHidden: self._options.getOptionValue("showHidden"),
             sortField: sortInfo.field,
             sortDesc: sortInfo.desc
+        });
+
+        self._files.on("error", function (jqXHR, resp, options) {
+            self._onFilesFatalError.apply(self, [resp.responseText]);
         });
 
         self._eventsView.setEvents(self._files.getEvents());

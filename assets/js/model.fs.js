@@ -18,6 +18,9 @@ var File = Backbone.Model.extend({
     idAttribute: "name",
 
     sync: function (method, model, options) {
+        var self = this;
+        var errorCb = options.error;
+
         // Fall back to the default apply method for read requests.
         if (method == "read")
             return Backbone.sync.apply(this, arguments);
@@ -25,10 +28,16 @@ var File = Backbone.Model.extend({
         // The following methods go through special endpoints.
 
         if (method == "delete") {
-            $.ajax({
+            Backbone.ajax(_.extend(options, {
                 type: "POST",
-                url: "/rm?f=" + encodeURIComponent(model.get("path"))
-            });
+                url: "/rm?f=" + encodeURIComponent(model.get("path")),
+                error: function () {
+                    console.log("DELETE ERROR");
+
+                    if (errorCb)
+                        errorCb.apply(self, arguments);
+                }
+            }));
 
             return;
         }
@@ -39,10 +48,16 @@ var File = Backbone.Model.extend({
                 var from = encodeURIComponent(model.get("path"));
                 var to = encodeURIComponent(model.get("name"));
 
-                Backbone.ajax(_.extend({
+                Backbone.ajax(_.extend(options, {
                     type: "POST",
-                    url: "/mv?f=" + from + "&n=" + to
-                }, options));
+                    url: "/mv?f=" + from + "&n=" + to,
+                    error: function () {
+                        console.log("RENAME ERROR");
+
+                        if (errorCb)
+                            errorCb.apply(self, arguments);
+                    }
+                }));
             }
 
             return;
@@ -51,9 +66,15 @@ var File = Backbone.Model.extend({
         if (method == "create") {
             // The only thing we create is a
             if (model.get("isDir")) {
-                Backbone.ajax(_.extend({
+                Backbone.ajax(_.extend(options, {
                     type: "POST",
-                    url: "/mkdir?p=" + encodeURIComponent(model.get("path"))
+                    url: "/mkdir?p=" + encodeURIComponent(model.get("path")),
+                    error: function () {
+                        console.log("CREATE ERROR");
+
+                        if (errorCb)
+                            errorCb.apply(self, arguments);
+                    }
                 }));
 
                 // Immediately destroy the model since it'll appear by itsef as a newly

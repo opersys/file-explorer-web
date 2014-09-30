@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-var ConfirmPopup = Backbone.View.extend({
+var MessagePopup = Backbone.View.extend({
 
     _action: null,
     _files: null,
     _btnOkId: _.uniqueId("confirmPopup"),
-    _btnCancelId: _.uniqueId("confirmPopup"),
-    _chkConfirmId: _.uniqueId("confirmPopup"),
 
     // This is the the title of the dialog, set this in the constructor.
     title: "Default title",
@@ -37,38 +35,22 @@ var ConfirmPopup = Backbone.View.extend({
 
         self._files = options.files;
         self._context = options.context;
-        self._confirm = options.confirm || function () {};
-        self._cancel = options.cancel || function () {};
         self._options = options.options;
     },
+
+    renderBody: function ($body) {},
 
     _onPopupOpened: function () {
         var self = this;
 
         $(document.getElementById(self._btnOkId)).bind("click", function () {
-            if (self._confirm)
-                self._confirm.apply(self._context);
-
             w2popup.close();
         });
-
-        $(document.getElementById(self._btnCancelId)).bind("click", function () {
-            if (self._cancel)
-                self._cancel.apply(self._context);
-
-            w2popup.close();
-        });
-
-        $(document.getElementById(self._chkConfirmId)).bind("change", function () {
-            self._options.setOptionValue("confirmDelete", $(this).prop("checked"));
-        })
     },
-
-    renderBody: function ($body) {},
 
     render: function () {
         var self = this;
-        var body, buttons, btnOk, btnCancel, chkConfirm, main;
+        var body, buttons, btnOk, main;
         var filelist = $("<ul></ul>");
 
         // Body
@@ -78,28 +60,14 @@ var ConfirmPopup = Backbone.View.extend({
 
         this.renderBody(body);
 
-        // Buttons.
-        chkConfirm = $("<input></input>")
-            .attr("id", self._chkConfirmId)
-            .attr("type", "checkbox")
-            .attr("checked", self._options.getOptionValue(self.confirmOption))
-            .add($("<label></label>")
-                .attr("for", self._chkConfirmId)
-                .text(self.confirmOptionText));
         btnOk = $("<button></button>")
             .attr("id", self._btnOkId)
             .attr("class", "btn")
             .text("OK");
-        btnCancel = $("<button></button>")
-            .attr("id", self._btnCancelId)
-            .attr("class", "btn")
-            .text("Cancel");
 
         buttons = $("<div></div>")
             .attr("rel", "buttons")
-            .append(chkConfirm)
             .append(btnOk)
-            .append(btnCancel);
 
         body.append(filelist);
         main.append([body, buttons]);

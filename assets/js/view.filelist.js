@@ -106,6 +106,51 @@ var FileListView = Backbone.View.extend({
             });
         },
 
+        _onFilesAdd: function (model) {
+            var self = this;
+
+            self._filesGrid.invalidate();
+            self._filesGrid.updateRowCount();
+
+            // Immediately resize the canvas.
+            self._filesGrid.resizeCanvas();
+
+            self._filesGrid.render();
+
+            // If the new model is the result of a directory creation, immediately
+            // make the corresponding name editable.
+            if (model.get("isMkdir")) {
+                var rowNo = self._files.indexOf(model);
+                var colNo = self.getColumnPos("name");
+
+                if (colNo > 0) {
+                    self._filesGrid.setActiveCell(rowNo, colNo);
+                    self._filesGrid.editActiveCell();
+                }
+            }
+        },
+
+        _onFilesRemove: function () {
+            var self = this;
+
+            self._filesGrid.invalidate();
+            self._filesGrid.updateRowCount();
+
+            // Immediately resize the canvas.
+            self._filesGrid.resizeCanvas();
+
+            self._filesGrid.render();
+        },
+
+        _onFilesChange: function () {
+            var self = this;
+
+            self._filesGrid.invalidate();
+            self._filesGrid.updateRowCount();
+
+            self._filesGrid.render();
+        },
+
         // Edit command handler.
         _getEditCommandHandler: function () {
             var self = this;
@@ -260,43 +305,17 @@ var FileListView = Backbone.View.extend({
             self._filesGrid.render();
 
             self._files.on("add", function (model) {
-                self._filesGrid.invalidate();
-                self._filesGrid.updateRowCount();
-
-                // Immediately resize the canvas.
-                self._filesGrid.resizeCanvas();
-
-                self._filesGrid.render();
-
-                // If the new model is the result of a directory creation, immediately
-                // make the corresponding name editable.
-                if (model.get("isMkdir")) {
-                    var rowNo = self._files.indexOf(model);
-                    var colNo = self.getColumnPos("name");
-
-                    if (colNo > 0) {
-                        self._filesGrid.setActiveCell(rowNo, colNo);
-                        self._filesGrid.editActiveCell();
-                    }
-                }
+                self._onFilesAdd.apply(self, [model]);
             });
 
             self._files.on("remove", function () {
-                self._filesGrid.invalidate();
-                self._filesGrid.updateRowCount();
-
-                // Immediately resize the canvas.
-                self._filesGrid.resizeCanvas();
-
-                self._filesGrid.render();
+                self._onFilesRemove.apply(self);
             });
 
             self._files.on("change", function () {
-                self._filesGrid.invalidate();
-                self._filesGrid.updateRowCount();
-
-                self._filesGrid.render();
+                self._onFilesChange.apply(self);
             });
+
         },
 
         resize: function () {

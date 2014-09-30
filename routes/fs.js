@@ -423,12 +423,25 @@ exports.rm = function (req, res) {
         res.status(500).end("Argument error. No files provided.");
 
     else {
-        fsx.unlink(req.query.f, function (err) {
-            if (err)
-                res.status(500).end("Delete error: " + err);
-            else
-                res.end();
+        // Handles rmdir as well as rm for convenience on the front end.
+        fsx.stat(req.query.f, function (err, fstat) {
+            if (fstat.isDirectory()) {
+                fsx.rmdir(req.query.f, function (err) {
+                    if (err)
+                        res.status(500).end("Delete error: " + err);
+                    else
+                        res.end();
+                });
+            } else {
+                fsx.unlink(req.query.f, function (err) {
+                    if (err)
+                        res.status(500).end("Delete error: " + err);
+                    else
+                        res.end();
+                });
+            }
         });
+
     }
 };
 

@@ -26,6 +26,7 @@ var WebSocket = require("ws").Server;
 var busboy = require("express-busboy");
 var flash = require("connect-flash");
 var spawn = require("child_process").spawn;
+var eventSource = require("event-source-emitter");
 var os = require("os");
 
 // Express application
@@ -136,6 +137,11 @@ app.post("/rm", ensureAuthenticated, fsroute.rm);
 app.post("/mv", ensureAuthenticated, fsroute.mv);
 app.post("/mkdir", ensureAuthenticated, fsroute.mkdir);
 
+// Keep-alive. This event source will be enabled for the lifetime of the server process.
+app.get("/ka", function (req, res) {
+    eventSource(req, res, { keepAlive: true });
+});
+
 server.listen(app.get("port"), function() {});
 
 // Handle receiving the "quit" command from the UI.
@@ -143,6 +149,7 @@ process.stdin.on("data", function (chunk) {
     var cmd, params, cs;
 
     cs = chunk.toString().split("\n")[0].trim().split(" ");
+
     cmd = cs.shift().toLowerCase();
     params = cs;
 

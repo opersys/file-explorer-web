@@ -17,6 +17,16 @@
 var RenamePopup = ConfirmPopup.extend({
 
     initialize: function (options) {
+        options.buttons = [
+            {
+                caption: "Yes",
+                action: options.confirm
+            },
+            {
+                caption: "No"
+            }
+        ];
+
         ConfirmPopup.prototype.initialize.apply(this, [options]);
 
         this._to = options.to;

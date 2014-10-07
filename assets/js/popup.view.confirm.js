@@ -35,33 +35,31 @@ var ConfirmPopup = Backbone.View.extend({
     initialize: function (options) {
         var self = this;
 
-        self._files = options.files;
         self._context = options.context;
+        self._buttons = options.buttons;
         self._confirm = options.confirm || function () {};
         self._cancel = options.cancel || function () {};
         self._options = options.options;
+        self._showClose = options.showClose || false;
     },
 
     _onPopupOpened: function () {
         var self = this;
 
-        $(document.getElementById(self._btnOkId)).bind("click", function () {
-            if (self._confirm)
-                self._confirm.apply(self._context);
+        _.each(self._buttons, function (btnData) {
+            $(document.getElementById(btnData.id)).bind("click", function () {
+                if (btnData.action)
+                    btnData.action.apply(self._context);
 
-            w2popup.close();
+                w2popup.close();
+            });
         });
 
-        $(document.getElementById(self._btnCancelId)).bind("click", function () {
-            if (self._cancel)
-                self._cancel.apply(self._context);
-
-            w2popup.close();
-        });
-
-        $(document.getElementById(self._chkConfirmId)).bind("change", function () {
-            self._options.setOptionValue("confirmDelete", $(this).prop("checked"));
-        })
+        if (self._confirm) {
+            $(document.getElementById(self._chkConfirmId)).bind("change", function () {
+                self._options.setOptionValue("confirmDelete", $(this).prop("checked"));
+            });
+        }
     },
 
     renderBody: function ($body) {},
@@ -79,27 +77,32 @@ var ConfirmPopup = Backbone.View.extend({
         this.renderBody(body);
 
         // Buttons.
-        chkConfirm = $("<input></input>")
-            .attr("id", self._chkConfirmId)
-            .attr("type", "checkbox")
-            .attr("checked", self._options.getOptionValue(self.confirmOption))
-            .add($("<label></label>")
-                .attr("for", self._chkConfirmId)
-                .text(self.confirmOptionText));
-        btnOk = $("<button></button>")
-            .attr("id", self._btnOkId)
-            .attr("class", "btn")
-            .text("OK");
-        btnCancel = $("<button></button>")
-            .attr("id", self._btnCancelId)
-            .attr("class", "btn")
-            .text("Cancel");
+        if (self.confirmOption)
+            chkConfirm = $("<input></input>")
+                .attr("id", self._chkConfirmId)
+                .attr("type", "checkbox")
+                .attr("checked", self._options.getOptionValue(self.confirmOption))
+                .add($("<label></label>")
+                    .attr("for", self._chkConfirmId)
+                    .text(self.confirmOptionText));
+
+        _.each(self._buttons, function (btnData) {
+            btnData.id = _.uniqueId("confirmDialog");
+            btnData.$btn = $("<button></button>")
+                .attr("class", "btn")
+                .attr("id", btnData.id)
+                .text(btnData.caption);
+        });
 
         buttons = $("<div></div>")
-            .attr("rel", "buttons")
-            .append(chkConfirm)
-            .append(btnOk)
-            .append(btnCancel);
+            .attr("rel", "buttons");
+
+        if (self.confirmOption)
+            buttons.append(chkConfirm);
+
+        _.each(self._buttons, function (btnData) {
+            buttons.append(btnData.$btn);
+        });
 
         body.append(filelist);
         main.append([body, buttons]);
@@ -107,6 +110,7 @@ var ConfirmPopup = Backbone.View.extend({
         main.w2popup({
             title: self.title,
             modal: true,
+            showClose: self._showClose,
             onOpen: function (event) {
                 event.onComplete = function () {
                     self._onPopupOpened.apply(self);

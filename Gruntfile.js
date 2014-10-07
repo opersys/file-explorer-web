@@ -143,6 +143,7 @@ module.exports = function (grunt) {
                     "assets/js/popup.view.delete.js",
                     "assets/js/popup.view.rename.js",
                     "assets/js/popup.view.errormsg.js",
+                    "assets/js/popup.view.stopped.js",
                     "assets/js/overlay.view.columns.js",
                     "assets/js/overlay.view.options.js",
                     "assets/js/overlay.view.errors.js",

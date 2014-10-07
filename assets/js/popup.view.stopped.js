@@ -14,20 +14,18 @@
  * limitations under the License.
  */
 
-var ErrorMessagePopup = MessagePopup.extend({
+var StoppedPopup = ConfirmPopup.extend({
 
     initialize: function (options) {
+        options.showClose = false;
+
         ConfirmPopup.prototype.initialize.apply(this, [options]);
 
-        this.title = "Error";
-        this._serverMsg = options.serverMsg;
-        this._msg = options.msg
+        this.title = "Lost backend";
     },
 
     renderBody: function ($body) {
-        $body.append(
-            $("<div></div>").text(this._msg));
-        $body.append(
-            $("<pre></pre>").text(this._serverMsg));
+        $body.text("Communication with the backend was lost.");
     }
+
 });

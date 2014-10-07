@@ -54,6 +54,24 @@ var MainView = Backbone.View.extend({
         self._optionsOverlayId = _.uniqueId("optionsOverlay");
         self._errorsOverlayId = _.uniqueId("errorsOverlay");
 
+        self._ka = new EventSource("/ka");
+        self._ka.onerror = function () {
+            new StoppedPopup({
+                context: self,
+                buttons: [
+                    {
+                        caption: "Refresh browser",
+                        action: function () {
+                            location.reload();
+                        }
+                    },
+                    {
+                        caption: "Cancel"
+                    }
+                ]
+            }).render();
+        };
+
         self._options = opts.options;
 
         $("#mainLayout").w2layout({

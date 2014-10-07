@@ -26,12 +26,16 @@ var FilesView = Backbone.View.extend({
     _onFilesFatalError: function (serverMsg) {
         var self = this;
 
-        new ServerMessagePopup({
+        new ErrorMessagePopup({
             serverMsg: serverMsg,
             msg: "The backend reported the following error"
         }).render();
 
         self.openDirectory(self._currentDir);
+    },
+
+    _onDisconnected: function () {
+
     },
 
     _onFileSelected: function (files) {

@@ -70,7 +70,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Static files.
-app.use(exStatic(path.join(__dirname, "public"), { index: false }));
+app.use(exStatic(path.join(__dirname, "public"), { index: false, redirect: false }));
 
 // Logging: enabled in development only
 if ("development" == app.get("env"))
@@ -103,9 +103,7 @@ passport.deserializeUser(function(pass, done) {
 // Routes configuration.
 //
 
-app.get("/",
-    ensureAuthenticated,
-    function (req, res) { res.redirect("/index"); });
+app.get("/", ensureAuthenticated, function (req, res) { res.redirect("/index"); });
 
 // Static pages.
 app.get("/index",

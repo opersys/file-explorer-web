@@ -14,6 +14,14 @@
  * limitations under the License.
  */
 
+function showApropos() {
+    w2popup.load({
+        width: "640",
+        height: "480",
+        url: "/apropos"
+    });
+}
+
 var MainView = Backbone.View.extend({
 
     _columnsOverlayId: null,
@@ -106,7 +114,11 @@ var MainView = Backbone.View.extend({
                                     onShow: function () { self.showErrorsOverlay(); }
                                 },
                                 icon: "icon-exclamation-sign"
-                            }
+                            },
+                            { type: "html", html:
+                                "<a href='http://www.opersys.com'><img alt='opersys logo' src='/images/opersys_land_logo.png' height='24'/></a>" },
+                            { type: "html", html:
+                                "<a href='javascript:showApropos()'><img alt='copyright icon' src='/images/copyright.png' /></a>" }
                         ],
                         onClick: function (event) {
                             if (event.target == "btnRefresh")

@@ -17,7 +17,6 @@
         "morgan": "*",
         "underscore": "*",
         "ws": "*",
-        "unix-access": "*",
         "mem-cache": "*",
         "fs-extra": "*"
     },

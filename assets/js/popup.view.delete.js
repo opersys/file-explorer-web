@@ -14,92 +14,37 @@
  * limitations under the License.
  */
 
-var DeletePopup = Backbone.View.extend({
-
-    _action: null,
-    _files: null,
-    _btnOkId: _.uniqueId("deletePopup"),
-    _btnCancelId: _.uniqueId("deletePopup"),
-    _chkConfirmId: _.uniqueId("deletePopup"),
+var DeletePopup = ConfirmPopup.extend({
 
     initialize: function (options) {
-        var self = this;
+        options.buttons = [
+            {
+                caption: "Yes",
+                action: options.confirm
+            },
+            {
+                caption: "No"
+            }
+        ];
 
-        self._files = options.files;
-        self._action = options.action;
-        self._options = options.options;
+        ConfirmPopup.prototype.initialize.apply(this, [options]);
+
+        this._files = options.files;
+        this.title = "Confirm file removal";
+        this.confirmOption = "confirmDelete";
+        this.confirmOptionText = "Always confirm removal";
     },
 
-    _onPopupOpened: function () {
+    renderBody: function ($body) {
         var self = this;
-
-        $(document.getElementById(self._btnOkId)).bind("click", function () {
-            if (self._action)
-                self._action.apply(self, [self._files]);
-
-            w2popup.close();
-        });
-
-        $(document.getElementById(self._btnCancelId)).bind("click", function () {
-            w2popup.close();
-        });
-
-        $(document.getElementById(self._chkConfirmId)).bind("change", function () {
-            self._options.setOptionValue("confirmDelete", $(this).prop("checked"));
-        })
-    },
-
-    render: function () {
-        var self = this;
-        var body, buttons, btnOk, btnCancel, chkConfirm, main;
         var filelist = $("<ul></ul>");
 
-        // Body
-        main = $("<div></div>");
-
-        body = $("<div></div>")
-            .attr("rel", "body")
-            .text("The following files will be removed:");
+        $body.text("The following files will be removed:");
 
         _.each(self._files, function (file) {
             filelist.append($("<li></li>").text(file.get("name")));
         });
 
-        // Buttons.
-        chkConfirm = $("<input></input>")
-            .attr("id", self._chkConfirmId)
-            .attr("type", "checkbox")
-            .attr("checked", self._options.getOptionValue("confirmDelete"))
-            .add($("<label></label>")
-                .attr("for", self._chkConfirmId)
-                .text("Always confirm removal"));
-        btnOk = $("<button></button>")
-            .attr("id", self._btnOkId)
-            .attr("class", "btn")
-            .text("OK");
-        btnCancel = $("<button></button>")
-            .attr("id", self._btnCancelId)
-            .attr("class", "btn")
-            .text("Cancel");
-
-        buttons = $("<div></div>")
-            .attr("rel", "buttons")
-            .append(chkConfirm)
-            .append(btnOk)
-            .append(btnCancel);
-
-        body.append(filelist);
-        main.append([body, buttons]);
-
-        main.w2popup({
-            title: "Confirm removal",
-            modal: true,
-            onOpen: function (event) {
-                event.onComplete = function () {
-                    self._onPopupOpened.apply(self);
-                }
-            }
-        });
+        $body.append(filelist);
     }
-
 });

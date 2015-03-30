@@ -18,39 +18,51 @@ var ConfirmPopup = Backbone.View.extend({
 
     _action: null,
     _files: null,
-    _btnOkId: _.uniqueId("deletePopup"),
-    _btnCancelId: _.uniqueId("deletePopup"),
-    _chkConfirmId: _.uniqueId("deletePopup"),
+    _btnOkId: _.uniqueId("confirmPopup"),
+    _btnCancelId: _.uniqueId("confirmPopup"),
+    _chkConfirmId: _.uniqueId("confirmPopup"),
+
+    // This is the the title of the dialog, set this in the constructor.
+    title: "Default title",
+
+    // This is the name of the option to be used to disable confirmation
+    // for this specific dialog.
+    confirmOption: "",
+
+    // The text accompaying the checkbox.
+    confirmOptionText: "",
 
     initialize: function (options) {
         var self = this;
 
-        self._files = options.files;
-        self._action = options.action;
+        self._context = options.context;
+        self._buttons = options.buttons;
+        self._confirm = options.confirm || function () {};
+        self._cancel = options.cancel || function () {};
         self._options = options.options;
+        self._showClose = options.showClose || false;
     },
 
     _onPopupOpened: function () {
         var self = this;
 
-        $(document.getElementById(self._btnOkId)).bind("click", function () {
-            if (self._action)
-                self._action.apply(self, [self._files]);
+        _.each(self._buttons, function (btnData) {
+            $(document.getElementById(btnData.id)).bind("click", function () {
+                if (btnData.action)
+                    btnData.action.apply(self._context);
 
-            w2popup.close();
+                w2popup.close();
+            });
         });
 
-        $(document.getElementById(self._btnCancelId)).bind("click", function () {
-            w2popup.close();
-        });
-
-        $(document.getElementById(self._chkConfirmId)).bind("change", function () {
-            self._options.setOptionValue("confirmDelete", $(this).prop("checked"));
-        })
+        if (self._confirm) {
+            $(document.getElementById(self._chkConfirmId)).bind("change", function () {
+                self._options.setOptionValue("confirmDelete", $(this).prop("checked"));
+            });
+        }
     },
 
-    renderBody: function () {
-    },
+    renderBody: function ($body) {},
 
     render: function () {
         var self = this;
@@ -60,17 +72,46 @@ var ConfirmPopup = Backbone.View.extend({
         // Body
         main = $("<div></div>");
 
-        body = $("<div></div>")
-            .attr("rel", "body")
-            .text("The following files will be removed:");
+        body = $("<div></div>").attr("rel", "body");
 
-        _.each(self._files, function (file) {
-            filelist.append($("<li></li>").text(file.get("name")));
+        this.renderBody(body);
+
+        // Buttons.
+        if (self.confirmOption)
+            chkConfirm = $("<input></input>")
+                .attr("id", self._chkConfirmId)
+                .attr("type", "checkbox")
+                .attr("checked", self._options.getOptionValue(self.confirmOption))
+                .add($("<label></label>")
+                    .attr("for", self._chkConfirmId)
+                    .text(self.confirmOptionText));
+
+        _.each(self._buttons, function (btnData) {
+            btnData.id = _.uniqueId("confirmDialog");
+            btnData.$btn = $("<button></button>")
+                .attr("class", "btn")
+                .attr("id", btnData.id)
+                .text(btnData.caption);
         });
 
+        buttons = $("<div></div>")
+            .attr("rel", "buttons");
+
+        if (self.confirmOption)
+            buttons.append(chkConfirm);
+
+        _.each(self._buttons, function (btnData) {
+            buttons.append(btnData.$btn);
+        });
+
+        body.append(filelist);
+        main.append([body, buttons]);
+
         main.w2popup({
-            title: "Confirm removal",
+            title: self.title,
             modal: true,
+            showClose: self._showClose,
+
             onOpen: function (event) {
                 event.onComplete = function () {
                     self._onPopupOpened.apply(self);

@@ -36,6 +36,7 @@ $(document).ready(function () {
     options.initOption("lastDirectory", "/");
     options.initOption("minimizeEvents", false);
     options.initOption("confirmDelete", true);
+    options.initOption("confirmRename", true);
 
     mainView = new MainView({
         el: $("#mainLayout"),

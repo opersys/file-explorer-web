@@ -52,7 +52,7 @@ module.exports = function (grunt) {
         copyto: {
             bins: {
                 files: [
-                    {  cwd: "bin", dest: "dist/_bin/", src: [ "**" ] }
+                    {  cwd: "./bin/", dest: "dist/_bin/", src: [ "**" ], expand: true }
                 ]
             },
 
@@ -62,9 +62,10 @@ module.exports = function (grunt) {
                         [
                             "app.js",
                             "package.json"
-                        ]
+                        ],
+                        expand: true
                     },
-                    { cwd: "./", dest: "dist/", src:
+                    { cwd: ".", dest: "dist/", src:
                         [
                             "public/**/*",
                             "routes/*.js",
@@ -72,12 +73,14 @@ module.exports = function (grunt) {
                             "inotify.js",
                             "unix-access.js",
                             "app.js"
-                        ]
+                        ],
+                        expand: true
                     },
-                    { cwd: "./assets/css", dest: "dist/public/css/", src:
+                    { cwd: "./assets/css/", dest: "dist/public/css/", src:
                         [
                             "font-awesome.min.css"
-                        ]
+                        ],
+                        expand: true
                     }
                 ]
             }
@@ -138,8 +141,12 @@ module.exports = function (grunt) {
                     "assets/js/model.options.js",
                     "assets/js/model.fs.js",
                     "assets/js/model.events.js",
+                    "assets/js/popup.view.confirm.js",
+                    "assets/js/popup.view.message.js",
                     "assets/js/popup.view.delete.js",
-                    "assets/js/popup.view.createdir.js",
+                    "assets/js/popup.view.rename.js",
+                    "assets/js/popup.view.errormsg.js",
+                    "assets/js/popup.view.stopped.js",
                     "assets/js/overlay.view.columns.js",
                     "assets/js/overlay.view.options.js",
                     "assets/js/overlay.view.errors.js",

@@ -142,30 +142,33 @@ var FileSystemView = Backbone.View.extend({
             new DeletePopup({
                 options: self._options,
                 files: self._selectedFiles,
-                action: function (files) {
-                    _.each(files, function (file) {
-                        file.destroy();
+                confirm: function () {
+                    _.each(self._selectedFiles, function (file) {
+                        // The wait argument ensures that Backbone will;
+                        // wait for the return of the server call before
+                        // removing the object from the collection. This
+                        // is required since a delete operation might fail and
+                        // we want the model to receive the error event
+                        // instead of being removed immediately.
+                        file.destroy({ wait: true });
                     });
+
+                    self._filesView.clearSelection();
                 }
             }).render();
         }
         // No confirmation needed.
         else {
             _.each(self._selectedFiles, function (file) {
-                file.destroy();
+                file.destroy({ wait: true });
             });
-        }
 
-        self._filesView.clearSelection();
+            self._filesView.clearSelection();
+        }
     },
 
-    createDirectory: function () {
-        new CreateDirectoryPopup({
-            options: self._options,
-            targetDirectory: self._currentDir,
-            action: function (files) {
-            }
-        }).render();
+    createDirectory: function (dirname) {
+        this._filesView.createDirectory(dirname);
     },
 
     initialize: function (opts) {

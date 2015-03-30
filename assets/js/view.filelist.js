@@ -55,7 +55,8 @@ var FileListView = Backbone.View.extend({
         _initializeGrid: function () {
             var self = this;
 
-            self._filesGrid = new Slick.Grid(self.$el, self._files, self._columns, self._filesOptions);
+            self._filesGrid = new Slick.Grid(self.$el, self._files, self._columns,
+                _.extend({ editCommandHandler: self._getEditCommandHandler() }, self._filesOptions));
 
             self._filesGrid.setSelectionModel(new Slick.RowSelectionModel());
 
@@ -105,6 +106,73 @@ var FileListView = Backbone.View.extend({
             });
         },
 
+        _onFilesAdd: function (model) {
+            var self = this;
+
+            self._filesGrid.invalidate();
+            self._filesGrid.updateRowCount();
+
+            // Immediately resize the canvas.
+            self._filesGrid.resizeCanvas();
+
+            self._filesGrid.render();
+
+            // If the new model is the result of a directory creation, immediately
+            // make the corresponding name editable.
+            if (model.get("isMkdir")) {
+                var rowNo = self._files.indexOf(model);
+                var colNo = self.getColumnPos("name");
+
+                if (colNo > 0) {
+                    self._filesGrid.setActiveCell(rowNo, colNo);
+                    self._filesGrid.editActiveCell();
+                }
+            }
+        },
+
+        _onFilesRemove: function () {
+            var self = this;
+
+            self._filesGrid.invalidate();
+            self._filesGrid.updateRowCount();
+
+            // Immediately resize the canvas.
+            self._filesGrid.resizeCanvas();
+
+            self._filesGrid.render();
+        },
+
+        _onFilesChange: function () {
+            var self = this;
+
+            self._filesGrid.invalidate();
+            self._filesGrid.updateRowCount();
+
+            self._filesGrid.render();
+        },
+
+        // Edit command handler.
+        _getEditCommandHandler: function () {
+            var self = this;
+
+            return function (model, column, editCommand) {
+                if (self._options.getOptionValue("confirmRename")) {
+                    new RenamePopup({
+                        from: model.get("name"),
+                        to: editCommand.serializedValue,
+                        options: self._options,
+                        cancel: function () {
+                            editCommand.undo();
+                        },
+                        confirm: function () {
+                            editCommand.execute();
+                        }
+                    }).render();
+                }
+                else editCommand.execute();
+            }
+        },
+
         // Grid events.
 
         _onColumnReordered: function (args) {
@@ -135,7 +203,7 @@ var FileListView = Backbone.View.extend({
 
         _onSelectedRangeChanged: function (args) {
             var self = this;
-            var r, files = [];
+            var files = [];
 
             _.each(args, function (range) {
                 for (var r = range.fromRow; r <= range.toRow; r++)
@@ -167,12 +235,46 @@ var FileListView = Backbone.View.extend({
 
         // Methods.
 
+        createDirectory: function () {
+            var self = this;
+            var newdir = new File();
+            var idx = 0;
+            var actualName, defaultName = "New Directory";
+
+            actualName = defaultName;
+
+            // Try to find a safe filename.
+            while (self._files.get(actualName) != null) {
+                actualName = defaultName + "." + ++idx;
+            }
+
+            newdir.set("path", self._currentDir.get("path") + "/" + actualName);
+            newdir.set("isDir", true);
+
+            self._files.add(newdir);
+
+            newdir.save();
+        },
+
+        clearSelection: function () {
+            this._filesGrid.setSelectedRows([]);
+        },
+
         getSelectedFiles: function () {
             var self = this;
 
             return _.map(this._filesGrid.getSelectedRows(), function (r) {
                 return self._filesGrid.getDataItem(r);
             });
+        },
+
+        getColumnPos: function (colId) {
+            var self = this;
+            var colMap = _.map(this._columns, function (col) {
+                return col.id;
+            });
+
+            return _.indexOf(colMap, colId);
         },
 
         setColumns: function (columnsIds) {
@@ -202,32 +304,18 @@ var FileListView = Backbone.View.extend({
             self._filesGrid.setData(self._files);
             self._filesGrid.render();
 
-            self._files.on("add", function () {
-                self._filesGrid.invalidate();
-                self._filesGrid.updateRowCount();
-
-                // Immediately resize the canvas.
-                self._filesGrid.resizeCanvas();
-
-                self._filesGrid.render();
+            self._files.on("add", function (model) {
+                self._onFilesAdd.apply(self, [model]);
             });
 
             self._files.on("remove", function () {
-                self._filesGrid.invalidate();
-                self._filesGrid.updateRowCount();
-
-                // Immediately resize the canvas.
-                self._filesGrid.resizeCanvas();
-
-                self._filesGrid.render();
+                self._onFilesRemove.apply(self);
             });
 
             self._files.on("change", function () {
-                self._filesGrid.invalidate();
-                self._filesGrid.updateRowCount();
-
-                self._filesGrid.render();
+                self._onFilesChange.apply(self);
             });
+
         },
 
         resize: function () {

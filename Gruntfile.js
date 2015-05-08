@@ -104,6 +104,7 @@ module.exports = function (grunt) {
                 src: [
                     "external/slickgrid/slick.grid.css",
                     "external/slickgrid/slick-default-theme.css",
+                    "external/opentip/opentip.css",
                     "external/w2ui/w2ui-1.4.min.css",
                     "assets/css/style.css",
                     "external/jstree/style-jstree.css",
@@ -135,7 +136,8 @@ module.exports = function (grunt) {
                     "external/slickgrid/plugins/slick.cellrangeselector.js",
                     "external/slickgrid/plugins/slick.rowselectionmodel.js",
                     "external/jquery.cookie/jquery.cookie.js",
-                    "external/dropzone/dropzone.js"
+                    "external/dropzone/dropzone.js",
+                    "external/opentip/opentip-jquery.min.js"
                 ],
                 dest: "dist/public/js/<%= pkg.name %>_libs.js"
             },

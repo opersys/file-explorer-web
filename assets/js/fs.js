@@ -28,6 +28,12 @@ var resizeWindow = function () {
 $(document).ready(function () {
     var options = new Options();
 
+    Opentip.lastZIndex = 1000;
+    Opentip.styles.warnPopup = {
+        extends: "dark",
+        hideTriggers: ["closeButton"]
+    };
+
     options.fetch();
     options.initOption("columns", ["name", "uid", "gid", "size"]);
     options.initOption("showHidden", false);

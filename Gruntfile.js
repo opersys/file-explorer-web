@@ -83,6 +83,16 @@ module.exports = function (grunt) {
                         expand: true
                     }
                 ]
+            },
+            external: {
+                files: [
+                    // FontAwesome
+                    { src: [ "external/FontAwesome/font-awesome.min.css" ], dest: "dist/public/css/font-awesome.min.css" },
+                    { expand: true,
+                        cwd: "external/FontAwesome",
+                        src: ["*.otf", "*.eot", "*.svg", "*.ttf", "*.woff"],
+                        dest: "dist/public/font" }
+                ]
             }
         },
 
@@ -92,40 +102,40 @@ module.exports = function (grunt) {
                 // Font Awesome is not included since it seems it has to be
                 // loaded alone for the web font to be properly loaded in Chrome.
                 src: [
-                    "assets/css/slick.grid.css",
-                    "assets/css/slick-default-theme.css",
-                    "assets/css/w2ui-1.4.min.css",
+                    "external/slickgrid/slick.grid.css",
+                    "external/slickgrid/slick-default-theme.css",
+                    "external/w2ui/w2ui-1.4.min.css",
                     "assets/css/style.css",
-                    "assets/css/style-jstree.css",
-                    "assets/css/dropzone.css"
+                    "external/jstree/style-jstree.css",
+                    "external/dropzone/dropzone.css"
                 ],
                 dest: "dist/public/css/<%= pkg.name %>_styles.css"
             },
             dist_libs: {
                 // Source files. Order matters.
                 src: [
-                    "assets/jslib/jquery-2.0.3.min.js",
-                    "assets/jslib/jquery.event.drag-2.2.js",
-                    "assets/jslib/jquery.timer.js",
-                    "assets/jslib/underscore-min.js",
-                    "assets/jslib/backbone.js",
-                    "assets/jslib/backbone.localStorage-min.js",
-                    "assets/jslib/humanize.min.js",
-                    "assets/jslib/moment.min.js",
-                    "assets/jslib/w2ui-1.4.min.js",
-                    "assets/jslib/jstree.min.js",
+                    "external/jquery/jquery-2.0.3.min.js",
+                    "external/jquery.event.drag/jquery.event.drag-2.2.js",
+                    "external/jquery.timer/jquery.timer.js",
+                    "external/underscore/underscore-min.js",
+                    "external/backbone/backbone.js",
+                    "external/backbone.localstorage/backbone.localStorage-min.js",
+                    "external/humanize/humanize.min.js",
+                    "external/moment/moment.min.js",
+                    "external/w2ui/w2ui-1.4.min.js",
+                    "external/jstree/jstree.min.js",
                     /* SlickGrid requires this but this is not the complete
                        JQuery UI distribution. Just the bare minimum was included. */
-                    "assets/jslib/jquery-ui.min.js",
-                    "assets/jslib/slickgrid/slick.core.js",
-                    "assets/jslib/slickgrid/slick.editors.js",
-                    "assets/jslib/slickgrid/slick.grid.js",
-                    "assets/jslib/slickgrid/slick.formatters.js",
-                    "assets/jslib/slickgrid/plugins/slick.cellselectionmodel.js",
-                    "assets/jslib/slickgrid/plugins/slick.cellrangeselector.js",
-                    "assets/jslib/slickgrid/plugins/slick.rowselectionmodel.js",
-                    "assets/jslib/jquery.cookie.js",
-                    "assets/jslib/dropzone.js"
+                    "external/jquery-ui/jquery-ui.min.js",
+                    "external/slickgrid/slick.core.js",
+                    "external/slickgrid/slick.editors.js",
+                    "external/slickgrid/slick.grid.js",
+                    "external/slickgrid/slick.formatters.js",
+                    "external/slickgrid/plugins/slick.cellselectionmodel.js",
+                    "external/slickgrid/plugins/slick.cellrangeselector.js",
+                    "external/slickgrid/plugins/slick.rowselectionmodel.js",
+                    "external/jquery.cookie/jquery.cookie.js",
+                    "external/dropzone/dropzone.js"
                 ],
                 dest: "dist/public/js/<%= pkg.name %>_libs.js"
             },

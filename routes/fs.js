@@ -302,18 +302,12 @@ exports.event = function (req, res) {
 
 // Download
 exports.dl = function (req, res) {
-    var fileDl;
-
     if (req.query.p) {
         try {
-            fileDl = fsx.createReadStream(req.query.p);
-
-            res.set({
-                "Content-Disposition": "attachment; filename=" + path.basename(req.query.p)
-            });
-
-            fileDl.on("data", function (chunk) {
-                res.send(chunk);
+            res.sendFile(req.query.p, {
+                headers: {
+                    "Content-Disposition": "attachment; filename=" + path.basename(req.query.p)
+                }
             });
 
         } catch (ex) {

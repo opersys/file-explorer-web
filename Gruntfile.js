@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Opersys inc.
+ * Copyright (C) 2014-2015, Opersys inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -187,25 +187,6 @@ module.exports = function (grunt) {
                 dest: "dist/public/js/<%= pkg.name %>_login.js"
             }
         },
-
-        /*uglify: {
-            dist: {
-                options: {
-                    sourceMap: true
-                },
-                files: {
-                    "dist/public/js/<%= pkg.name %>_libs.min.js": ["<%= concat.dist_libs.dest %>"],
-                    "dist/public/js/<%= pkg.name %>_main.min.js": ["<%= concat.dist_main.dest %>"]
-                }
-            }
-        },
-
-        cssmin: {
-            dist: {
-                src: "<%= concat.dist_css.dest %>",
-                dest: "<%= concat.dist_css.dest %>"
-            }
-        },*/
 
         exec: {
             npm_install: {

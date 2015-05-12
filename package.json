@@ -6,19 +6,19 @@
         "start": "node-android app.js"
     },
     "dependencies": {
-        "express": "*",
-        "express-session": "*",
-        "express-busboy": "*",
-        "connect-flash": "*",
-        "passport": "*",
-        "passport-local": "*",
-        "serve-static": "*",
-        "event-source-emitter": "*",
-        "morgan": "*",
-        "underscore": "*",
-        "ws": "*",
-        "mem-cache": "*",
-        "fs-extra": "*"
+        "express": "4.12.3",
+        "express-session": "1.10.4",
+        "express-busboy": "2.4.0",
+        "connect-flash": "0.1.1",
+        "passport": "0.2.1",
+        "passport-local": "1.0.0",
+        "serve-static": "1.9.2",
+        "event-source-emitter": "0.0.2",
+        "morgan": "1.5.2",
+        "underscore": "1.8.2",
+        "ws": "0.7.1",
+        "mem-cache": "0.0.4",
+        "fs-extra": "0.16.5"
     },
     "devDependencies": {
         "jade": "*",

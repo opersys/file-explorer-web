@@ -128,8 +128,14 @@ var FileSystemView = Backbone.View.extend({
     },
 
     downloadSelectedFiles: function () {
+        var target = "_blank", ua;
+
         _.each(this._selectedFiles, function (file) {
-            window.open("/dl?p=" + encodeURIComponent(file.get("path")), "_self");
+            ua = navigator.userAgent;
+            if (ua.indexOf("Firefox") != -1 || ua.indexOf("Iceweasel") != -1)
+                target = "_new";
+
+            window.open("/dl?p=" + encodeURIComponent(file.get("path")), target);
         });
     },
 

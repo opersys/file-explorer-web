@@ -155,7 +155,7 @@ function stat2json(filepath, fnadapter, filest) {
         atime: filest.atime,
         mtime: filest.mtime,
         ctime: filest.ctime,
-        mode: filest.mode,
+        mode: (filest.mode & ~0xf000).toString(8),
         modestr: mode2str(filest.mode),
         username: upwd.name,
         groupname: gpwd.name,

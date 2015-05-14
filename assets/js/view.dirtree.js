@@ -28,6 +28,9 @@ var DirTreeView = Backbone.View.extend({
 
         self.$el.jstree({
             "core" : {
+                "check_callback" : function (operation, node, node_parent, node_position, more) {
+                    return operation === "rename_node";
+                },
                 "data" : {
                     "url" : function (node) {
                         var showHidden = self._options.getOptionValue("showHidden") ? 1 : 0;
@@ -38,13 +41,19 @@ var DirTreeView = Backbone.View.extend({
                             return "/fs/dirs?h=" + showHidden + "&a=jstree&p=" + node.data.path
                     },
                     "data" : function (node) {
-                        return { "id" : node.id };
+                        return { id: node.id };
                     }
                 }
             },
             "types": {
                 "no-access": {
-                    "icon": "/icons/_noaccess.png"
+                    "icon": "./icons/_noaccess.png"
+                },
+                "broken-symlink": {
+                    "icon": "./icons/_noaccess.png"
+                },
+                "symlink": {
+                    "icon": "./icons/_symlink.png"
                 }
             },
             "ui": {
@@ -96,6 +105,21 @@ var DirTreeView = Backbone.View.extend({
             function () {
                 if (self._options.getOptionValue("lastDirectory"))
                     self.openDirectory(self._options.getOptionValue("lastDirectory"));
+            }
+        ).on("load_node.jstree",
+            function (node, status) {
+                status.node.children.forEach(function (nodeId) {
+                        var newName, node = self.$el.jstree("get_node", nodeId);
+
+                        if (node.type === "symlink") {
+                            if (node.data != null && node.data.link) {
+                                newName = node.text + " [-> " + node.data.link.path + "]";
+                            }
+
+                            self.$el.jstree("rename_node", node, newName);
+                        }
+                    }
+                );
             }
         );
     },

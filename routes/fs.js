@@ -34,9 +34,7 @@ var evTrap = {};
 
 var _adapters = {
     jstree: function (stat) {
-        var r, isBad;
-
-        isBad = (!stat.canRead) || (stat.error != null);
+        var r;
 
         r = {
             id: stat.path,
@@ -47,13 +45,19 @@ var _adapters = {
                 selected: false
             },
             data: stat,
-            type: "default"
+            children: []
         };
 
-        if (isBad)
-            r.type = "no-access";
+        if (stat.isDir && stat.canRead)
+            r.children = true;
+        if (stat.isSymlink && stat.canRead && stat.link.isDir)
+            r.children = true;
+
+        // All for type override, but fallback on the default otherwise.
+        if (stat.type)
+            r.type = stat.type;
         else
-            r.children = (stat.isDir ? true : []);
+            r.type = "default";
 
         return r;
     },
@@ -93,27 +97,32 @@ function mode2str(mode) {
     return s;
 }
 
-function ext2icon(filepath) {
+function ext2icon(filepath, type, filest) {
     var ext = path.extname(filepath).substring(1).toLowerCase();
     var icon = path.join("icons", ext + ".png");
 
-    // Handle folders.
-    try {
-        if (fsx.statSync(filepath).isDirectory())
-            return path.join("icons", "_folder.png");
-    } catch (ex) {
-        return path.join("icons", "_blank.png");
-    }
+    // Symlinks
+    if (type === "broken-symlink")
+        return path.join("icons", "_noaccess.png");
 
-    if (ext != "" && fsx.existsSync(path.join("public", icon)))
+    else if (type === "symlink")
+        return path.join("icons", "_symlink.png");
+
+    // Handle folders.
+    else if (filest.isDirectory() /*fsx.statSync(filepath).isDirectory()*/)
+        return path.join("icons", "_folder.png");
+
+    // Other kinds of files
+    else if (ext != "" && fsx.existsSync(path.join("public", icon)))
         return icon;
+
+    // Default icon
     else
-        // Default icon
         return path.join("icons", "_blank.png");
 }
 
 function stat2json(filepath, fnadapter, filest) {
-    var upwd, gpwd;
+    var upwd, gpwd, canRead, canWrite, canEnter, type;
 
     if (!fnadapter)
         fnadapter = _adapters.none;
@@ -141,9 +150,21 @@ function stat2json(filepath, fnadapter, filest) {
         gpwd = "?";
     }
 
+    canRead = access.sync(filepath, "r");
+    canWrite = access.sync(filepath, "w");
+    canEnter = access.sync(filepath, "x");
+
+    // Judge the type of the file
+    if (filest.isDirectory() && (!canRead || !canEnter))
+        type = "no-access";
+    else if (filest.isSymbolicLink() && (!canRead || !canEnter))
+        type = "broken-symlink";
+    else if (filest.isSymbolicLink())
+        type = "symlink";
+
     return fnadapter({
         name: filepath == "/" ? "/" : path.basename(filepath),
-        icon: ext2icon(filepath),
+        icon: ext2icon(filepath, type, filest),
         path: filepath,
         ino: filest.ino,
         uid: filest.uid,
@@ -165,9 +186,12 @@ function stat2json(filepath, fnadapter, filest) {
         isCharDev: filest.isCharacterDevice(),
         isFIFO: filest.isFIFO(),
         isSocket: filest.isSocket(),
-        canRead: access.sync(filepath, "r"),
-        canWrite: access.sync(filepath, "w"),
-        canEnter: access.sync(filepath, "x")
+        isSymlink: filest.isSymbolicLink(),
+        canRead: canRead,
+        canWrite: canWrite,
+        canEnter: canEnter,
+        link: filest.link,
+        type: type
     });
 }
 
@@ -355,7 +379,7 @@ exports.up = function (req, res) {
 
 // File system handler.
 exports.get = function (req, res) {
-    var rpath, showHidden, fnadapter, fslist = [], errlist = [];
+    var rpath, showHidden, fnadapter, fslist = [];
 
     // Handle data adapters.
     fnadapter = _adapters.none;
@@ -390,7 +414,7 @@ exports.get = function (req, res) {
             var filest, filepath = path.join(rpath, file);
 
             try {
-                filest = fsx.statSync(filepath);
+                filest = fsx.lstatSync(filepath);
             } catch (ex) {
                 fslist.push({
                     path: filepath,
@@ -403,7 +427,26 @@ exports.get = function (req, res) {
             if (!showHidden && file.charAt(0) == ".")
                 return;
 
-            if ((req.params.part == "files") || (req.params.part == "dirs" && filest.isDirectory()))
+            // Crack open symbolic links
+            if (filest.isSymbolicLink()) {
+                var slst, sltarget = fsx.readlinkSync(filepath);
+
+                // Symlinks are guaranteed to have at least a 'link' object in their file
+                // stat data. For broken symlinks, this will only contain a 'path' member
+
+                try {
+                    slst = stat2json(sltarget, _adapters.none, fsx.statSync(sltarget));
+                    filest.link = slst;
+                } catch (ex) {
+                    filest.link = {};
+                }
+
+                filest.link.path = filepath;
+            }
+
+            if ((req.params.part === "files") ||
+                (req.params.part === "dirs" && filest.isDirectory()) ||
+                (req.params.part === "dirs" && filest.isSymbolicLink() && filest.link.isDir))
                 fslist.push(stat2json(filepath, fnadapter, filest))
         });
 

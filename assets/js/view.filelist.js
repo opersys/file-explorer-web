@@ -23,6 +23,8 @@ var FileListView = Backbone.View.extend({
 
                         if (col.field == "ctime" || col.field == "mtime" || col.field == "atime")
                             return moment(data.get(col.field)).format("MMM Do HH:mm");
+                        if (col.field == "name" && data.get("isSymlink"))
+                            return data.get(col.field) + " [-> " + data.get("link").path + "]";
                         else
                             return data.get(col.field);
                     };

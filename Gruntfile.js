@@ -72,6 +72,7 @@ module.exports = function (grunt) {
                             "posix.js",
                             "inotify.js",
                             "unix-access.js",
+                            "abstract-socket.js",
                             "app.js"
                         ],
                         expand: true

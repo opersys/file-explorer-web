@@ -25,9 +25,11 @@ var path = require("path");
 var WebSocket = require("ws").Server;
 var busboy = require("express-busboy");
 var flash = require("connect-flash");
-var spawn = require("child_process").spawn;
 var eventSource = require("event-source-emitter");
 var os = require("os");
+var fs = require("fs");
+var jargvy = require('jargvy');
+var asock = require("./abstract_socket.js");
 
 // Express application
 var app = express();
@@ -50,8 +52,17 @@ function ensureAuthenticated(req, res, next) {
 // Routes;
 var fsroute = require("./routes/fs");
 
-app.set("env", process.env.ENV || "development");
-app.set("port", process.env.PORT || 3000);
+var rules = [
+    { "id": "-p", "name": "port", "default": "3000" },
+    { "id": "-e", "name": "environment", "default": "development" },
+    { "id": "-s", "name": "socket", "default": null }
+];
+jargvy.define(rules);
+var options = jargvy.extract();
+
+app.set("env", options.environment);
+app.set("port", options.port);
+app.set("socket", options.socket);
 app.set("views", path.join(__dirname, "views"));
 
 // Middlewares.
@@ -140,7 +151,34 @@ app.get("/ka", function (req, res) {
     eventSource(req, res, { keepAlive: true });
 });
 
-server.listen(app.get("port"), function() {});
+process.stdout.on("close", function () {
+    process.exit();
+});
+
+// This is the "keepalive" socket. The app front end opens a LocalServerSocket on which
+// the web front end can connect. Once the web front end is connected, killing the front
+// end app will close the socket and this code ensure the backend will exit once that happens.
+if (app.get("socket")) {
+    var kasock;
+
+    try {
+        kasock = asock.connect('\0' + app.get("socket"), function () {
+            console.log("Connected to keepalive socket...");
+        });
+
+        kasock.on("end", function () {
+            console.log("Lost keepalive socket...");
+            process.exit(1);
+        });
+
+    } catch (ex) {
+        console.log("Connection to keepalive socket failed:", ex);
+        process.exit(1);
+    }
+}
+
+// Try to listen on the default port..
+server.listen(app.get("port"), function () {});
 
 // Handle receiving the "quit" command from the UI.
 process.stdin.on("data", function (chunk) {

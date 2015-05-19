@@ -441,7 +441,7 @@ exports.get = function (req, res) {
                     filest.link = {};
                 }
 
-                filest.link.path = filepath;
+                filest.link.path = sltarget;
             }
 
             if ((req.params.part === "files") ||

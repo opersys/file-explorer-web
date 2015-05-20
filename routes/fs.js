@@ -108,6 +108,9 @@ function ext2icon(filepath, type, filest) {
     else if (type === "symlink")
         return path.join("icons", "_symlink.png");
 
+    else if (filepath.match(/.*tombstone_[0-9]*/))
+        return path.join("icons", "_tombstones.png");
+
     // Handle folders.
     else if (filest.isDirectory() /*fsx.statSync(filepath).isDirectory()*/)
         return path.join("icons", "_folder.png");
@@ -115,6 +118,10 @@ function ext2icon(filepath, type, filest) {
     // Other kinds of files
     else if (ext != "" && fsx.existsSync(path.join("public", icon)))
         return icon;
+
+    // Executable files
+    else if (parseInt(filest.mode) &  0100 || parseInt(filest.mode) & 010 || parseInt(filest.mode) & 01)
+        return path.join("icons", "_exec.png");
 
     // Default icon
     else

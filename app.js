@@ -28,7 +28,6 @@ var flash = require("connect-flash");
 var eventSource = require("event-source-emitter");
 var os = require("os");
 var fs = require("fs");
-var jargvy = require('jargvy');
 var asock = require("./abstract_socket.js");
 
 // Express application
@@ -52,17 +51,29 @@ function ensureAuthenticated(req, res, next) {
 // Routes;
 var fsroute = require("./routes/fs");
 
-var rules = [
-    { "id": "-p", "name": "port", "default": "3000" },
-    { "id": "-e", "name": "environment", "default": "development" },
-    { "id": "-s", "name": "socket", "default": null }
-];
-jargvy.define(rules);
-var options = jargvy.extract();
+var argv = require("yargs")
+    .options({
+        "p": {
+            alias: "port",
+            "default": "3000",
+            type: "number"
+        },
+        "e": {
+            alias: "environment",
+            "default": "development",
+            type: "string"
+        },
+        "s": {
+            alias: "socket",
+            type: "string"
+        }
+    }).argv;
 
-app.set("env", options.environment);
-app.set("port", options.port);
-app.set("socket", options.socket);
+console.log(argv);
+
+app.set("env", argv.environment);
+app.set("port", argv.port);
+app.set("socket", argv.socket);
 app.set("views", path.join(__dirname, "views"));
 
 // Middlewares.

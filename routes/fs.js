@@ -22,6 +22,7 @@ var access = require("../unix-access.js");
 var posix = require("../posix.js");
 var Inotify = require("../inotify.js").Inotify;
 var Cache = require("mem-cache");
+var async = require("async");
 
 // Current inotify instance.
 var inotify = new Inotify();
@@ -333,15 +334,82 @@ exports.event = function (req, res) {
 
 // Download
 exports.dl = function (req, res) {
+    var failMsg = "File " + req.query.p + " is not downloadable";
+
     if (req.query.p) {
         try {
-            res.sendFile(req.query.p, {
-                headers: {
-                    "Content-Disposition": "attachment; filename=" + path.basename(req.query.p)
+            fsx.stat(req.query.p, function (err, stat) {
+
+                if (err)
+                    res.status(500).send(failMsg + " (" + err + ")");
+
+                // Just don't...
+                if (stat.isFIFO() || stat.isSocket())
+                    res.status(500).send(failMsg);
+
+                // NOTE: We presume here that 0-sized files will not be seekable so we will
+                // try to read them directly instead of delegating that job to sendfile.
+                // sendfile works file with regular file.
+                else if (stat.size > 0) {
+                    res.sendFile(req.query.p, {
+                            headers: {
+                                "Content-Disposition": "attachment; filename=" + path.basename(req.query.p)
+                            }
+                        },
+                        function (err) {
+                            if (err)
+                                res.status(500).send(failMsg + " (" + err + ")");
+                        }
+                    );
+                }
+                // Try to read 0-sized files (or other kind of freaks) in memory.
+                else {
+                    res.set({
+                        "Content-Disposition": "attachment; filename=" + path.basename(req.query.p)
+                    });
+
+                    fsx.open(req.query.p, "r", function (err, fd) {
+                        var sentTotal = 0, buffsz = 4096, lastbread;
+
+                        if (err)
+                            res.status(500).send(failMsg + " (" + err + ")");
+
+                        async.until(
+                            function () {
+                                console.log("Test callback");
+                                return sentTotal == buffsz * 10 || lastbread == 0;
+                            },
+                            function (callback) {
+                                var buff = new Buffer(buffsz);
+
+                                fsx.read(fd, buff, 0, buff.length, null, function (err, bread, buff) {
+                                    if (err) callback(err);
+
+                                    lastbread = bread;
+
+                                    if (bread > 0) {
+                                        console.log("Sending " + bread);
+                                        sentTotal += bread;
+                                        res.write(buff.slice(0, bread));
+                                    }
+
+                                    callback();
+                                });
+                            },
+                            function (err) {
+                                if (err)
+                                    res.status(500).send(failMsg + " (" + err + ")");
+
+                                fsx.closeSync(fd);
+                                res.end();
+                            }
+                        );
+                    });
                 }
             });
 
         } catch (ex) {
+            res.status(500).send(failMsg + " (" + err + ")");
         }
     }
 };

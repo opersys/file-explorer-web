@@ -35,7 +35,7 @@ $(document).ready(function () {
     };
 
     options.fetch();
-    options.initOption("columns", ["name", "uid", "gid", "size"]);
+    options.initOption("columns", ["icon", "name", "uid", "gid", "size"]);
     options.initOption("showHidden", false);
     options.initOption("sortInfo", { field: "name", desc: false });
     options.initOption("directory", true);

@@ -191,7 +191,7 @@ module.exports = function (grunt) {
 
         exec: {
             npm_install: {
-                command: "npm --production install",
+                command: "npm --production install && npm dedupe",
                 stdout: false,
                 stderr: false,
                 cwd: "dist"

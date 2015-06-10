@@ -86,7 +86,7 @@ var FilesView = Backbone.View.extend({
             rootPath: self._currentDir.get("path"),
             showHidden: self._options.getOptionValue("showHidden"),
             sortField: sortInfo.field,
-            sortDesc: sortInfo.desc
+            sortDesc: sortInfo.desc,
         });
 
         self._files.on("error", function (jqXHR, resp, options) {

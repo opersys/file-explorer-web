@@ -17,7 +17,6 @@
 var _ = require("underscore");
 var fsx = require("fs-extra");
 var path = require("path");
-var eventSource = require("event-source-emitter");
 var access = require("../unix-access.js");
 var posix = require("../posix.js");
 var Inotify = require("../inotify.js").Inotify;
@@ -32,6 +31,8 @@ var renameCache = new Cache();
 
 //
 var evTrap = {};
+
+var fswatcher = null;
 
 var _adapters = {
     jstree: function (stat) {
@@ -203,133 +204,119 @@ function stat2json(filepath, fnadapter, filest) {
     });
 }
 
-exports.event = function (req, res) {
-    var rpath, cbCount = 0, lastCbTime, lastDelta, avgDelta = 0, sumDelta = 0;
+var FSWatcher = function (rpath, io) {
+    var self = this;
 
-    // No "p" parameter means we dump data for the root.
-    if (!req.query.p)
-        rpath = "/";
-    else
-        rpath = req.query.p;
+    self._pathSock = io.of(rpath.replace(/\//g, "_"));
+    self._rpath = rpath;
 
-    // Bundle the event source with the inotify context.
-    var evWrapper = {
+    self._watchId = inotify.addWatch({
         path: rpath,
+        watch_for: Inotify.IN_CREATE | Inotify.IN_DELETE |
+                   Inotify.IN_MODIFY | Inotify.IN_ATTRIB |
+                   Inotify.IN_MOVED_FROM | Inotify.IN_MOVED_TO,
+        callback: function () { self._inotify.apply(self, arguments); }
+    });
 
-        eventSource: eventSource(req, res, {
-            keepAlive: true,
+    // Rate control variables.
+    self._lastCbTime = null;
+    self._cbCount = 0;
+};
 
-            onClose: function () {
-                if (evWrapper.watchId != -1) {
-                    console.log("Closed inotify on " + evWrapper.path);
-                    inotify.removeWatch(evWrapper.watchId);
-                }
+FSWatcher.prototype.close = function () {
+    inotify.removeWatch(this._watchId);
+};
+
+FSWatcher.prototype._inotify = function (event) {
+    var self = this;
+    var evType = null, nowTs, lastDelta, sumDelta = 0, avgDelta = 0;
+
+    // Calculate the average delay between callbacks.
+    nowTs = new Date().getTime();
+
+    if (this._lastCbTime) {
+        self._cbCount++;
+
+        lastDelta = nowTs - self._lastCbTime;
+        sumDelta += lastDelta;
+        avgDelta = sumDelta / self._cbCount;
+    }
+
+    this._lastCbTime = new Date().getTime();
+
+    // The interface will certainly take 1 event per second without
+    // a itch so reset the rate counters.
+    if (avgDelta > 1) {
+        self._cbCount = 0;
+        sumDelta = 0;
+        avgDelta = 0;
+    }
+
+    // If we reach 100 calls with a delay < 1 second, stop the inotify
+    // watch.
+    if (self._cbCount >= 100 && avgDelta < 1.0) {
+        console.log(
+            "Inotify overflow (" + cbCount +" callbacks, average delta: " + avgDelta + ")");
+
+        inotify.removeWatch(self._watchId);
+        self._watchId = -1;
+        return;
+    }
+
+    if (!event.name) return;
+
+    var fpath = path.join(self._rpath, event.name);
+
+    if (event.mask & Inotify.IN_MOVED_FROM)
+        renameCache.set(event.cookie, event.name, 1000);
+
+    if (event.mask & Inotify.IN_MOVED_TO) {
+        var oldName = renameCache.get(event.cookie);
+
+        if (oldName) {
+            try {
+                this._pathSock.emit("rename", {
+                    path: fpath,
+                    newName: event.name,
+                    oldName: oldName,
+                    stat: stat2json(fpath)
+                });
+            } catch (ex) {
+                console.log("Stat call failed in 'rename' event: " + fpath);
             }
-        }),
 
-        watchId: inotify.addWatch({
-            path: rpath,
-            watch_for:
-                Inotify.IN_CREATE |
-                    Inotify.IN_DELETE |
-                    Inotify.IN_MODIFY |
-                    Inotify.IN_ATTRIB |
-                    Inotify.IN_MOVED_FROM |
-                    Inotify.IN_MOVED_TO,
+            renameCache.remove(event.cookie);
+        }
+    }
 
-            callback: function (event) {
-                var evType = null, nowTs;
+    if (event.mask & Inotify.IN_CREATE) evType = "create";
+    else if (event.mask & Inotify.IN_MODIFY) evType = "modify";
+    else if (event.mask & Inotify.IN_ATTRIB) evType = "modify";
+    else if (event.mask & Inotify.IN_DELETE) evType = "delete";
 
-                if (evWrapper.watchId < 0) return;
+    if (evType && evType != "delete") {
+        try {
+            var evData = stat2json(fpath);
 
-                // Calculate the average delay between callbacks.
-                nowTs = new Date().getTime();
-
-                if (lastCbTime) {
-                    cbCount++;
-
-                    lastDelta = nowTs - lastCbTime;
-                    sumDelta += lastDelta;
-                    avgDelta = sumDelta / cbCount;
-                }
-
-                lastCbTime = new Date().getTime();
-
-                // The interface will certainly take 1 event per second without
-                // a itch so reset the rate counters.
-                if (avgDelta > 1) {
-                    cbCount = 0;
-                    sumDelta = 0;
-                    avgDelta = 0;
-                }
-
-                // If we reach 100 calls with a delay < 1 second, stop the inotify
-                // watch.
-                if (cbCount >= 100 && avgDelta < 1.0) {
-                    console.log(
-                        "Inotify overflow (" + cbCount +" callbacks, average delta: " + avgDelta + ")");
-
-                    inotify.removeWatch(evWrapper.watchId);
-                    evWrapper.watchId = -1;
-                    return;
-                }
-
-                if (!event.name) return;
-
-                var fpath = path.join(rpath, event.name);
-
-                if (event.mask & Inotify.IN_MOVED_FROM)
-                    renameCache.set(event.cookie, event.name, 1000);
-
-                if (event.mask & Inotify.IN_MOVED_TO) {
-                    var oldName = renameCache.get(event.cookie);
-
-                    if (oldName) {
-                        try {
-                            evWrapper.eventSource.emit("rename", {
-                                path: fpath,
-                                newName: event.name,
-                                oldName: oldName,
-                                stat: stat2json(fpath)
-                            });
-                        } catch (ex) {
-                            console.log("Stat call failed in 'rename' event: " + fpath);
-                        }
-
-                        renameCache.remove(event.cookie);
-                    }
-                }
-
-                if (event.mask & Inotify.IN_CREATE) evType = "create";
-                else if (event.mask & Inotify.IN_MODIFY) evType = "modify";
-                else if (event.mask & Inotify.IN_ATTRIB) evType = "modify";
-                else if (event.mask & Inotify.IN_DELETE) evType = "delete";
-
-                if (evType && evType != "delete") {
-                    try {
-                        var evData = stat2json(fpath);
-
-                        if (evTrap[fpath]) {
-                            evTrap[fpath].apply(this, [evData]);
-                            delete evTrap[fpath];
-                        }
-
-                        evWrapper.eventSource.emit(evType, evData);
-                    } catch (ex) {
-                        console.log("Stat call failed in '" + evType + "' event: " + fpath + ", exception: " + ex);
-                    }
-                }
-                // We don't have the full stat for the delete event but at least
-                // pass the name entry to the interface.
-                else if (evType && evType == "delete") {
-                    evWrapper.eventSource.emit("delete", {
-                        path: fpath,
-                        name: path.basename(fpath)
-                    });
-                }
+            if (evTrap[fpath]) {
+                evTrap[fpath].apply(this, [evData]);
+                delete evTrap[fpath];
             }
-        })
-    };
+
+            this._pathSock.emit(evType, evData);
+
+        } catch (ex) {
+            console.log("Stat call failed in '" + evType + "' event: " + fpath + ", exception: " + ex);
+        }
+    }
+    // We don't have the full stat for the delete event but at least
+    // pass the name entry to the interface.
+    else if (evType && evType == "delete") {
+        this._pathSock.emit("delete", {
+            path: fpath,
+            name: path.basename(fpath)
+        });
+    }
 };
 
 // Download
@@ -376,7 +363,6 @@ exports.dl = function (req, res) {
 
                         async.until(
                             function () {
-                                console.log("Test callback");
                                 return sentTotal == buffsz * 10 || lastbread == 0;
                             },
                             function (callback) {
@@ -388,7 +374,6 @@ exports.dl = function (req, res) {
                                     lastbread = bread;
 
                                     if (bread > 0) {
-                                        console.log("Sending " + bread);
                                         sentTotal += bread;
                                         res.write(buff.slice(0, bread));
                                     }
@@ -453,7 +438,7 @@ exports.up = function (req, res) {
 };
 
 // File system handler.
-exports.get = function (req, res) {
+exports.get = function (io, req, res) {
     var rpath, showHidden, fnadapter, fslist = [];
 
     // Handle data adapters.
@@ -466,7 +451,7 @@ exports.get = function (req, res) {
             throw new Exception("Unknown adapter");
     }
 
-    // No "p" parameter means we dump data for the root.
+    // No "p" parameter means we dump data for the root. 1
     if (!req.query.p) {
         res.json([stat2json("/", fnadapter)]);
         return;
@@ -475,6 +460,11 @@ exports.get = function (req, res) {
 
     // No 'h' parameter means we just show all.
     showHidden = !(req.query.h && req.query.h == "0");
+
+    if (fswatcher != null)
+        fswatcher.close();
+
+    fswatcher = new FSWatcher(rpath, io);
 
     fsx.readdir(rpath, function (err, files) {
         if (err) {
@@ -519,10 +509,15 @@ exports.get = function (req, res) {
                 filest.link.path = sltarget;
             }
 
-            if ((req.params.part === "files") ||
-                (req.params.part === "dirs" && filest.isDirectory()) ||
-                (req.params.part === "dirs" && filest.isSymbolicLink() && filest.link.isDir))
-                fslist.push(stat2json(filepath, fnadapter, filest))
+            var isDir = (req.params.part === "dirs" && filest.isDirectory()) ||
+                (req.params.part === "dirs" && filest.isSymbolicLink() && filest.link.isDir);
+            var isFiles = (req.params.part === "files");
+
+            // If a directory was requested, create a new channel in the websocket
+
+            if (isFiles || isDir) {
+                fslist.push(stat2json(filepath, fnadapter, filest));
+            }
         });
 
         res.json(fslist);

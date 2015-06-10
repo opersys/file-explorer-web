@@ -182,6 +182,7 @@ var FileSystemView = Backbone.View.extend({
 
         self._uploadOverlayId = _.uniqueId("uploadOverlay");
         self._options = opts.options;
+        self._sock = opts.sock;
 
         // Initialize the internal layout
         self.$el.w2layout({

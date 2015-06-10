@@ -124,45 +124,35 @@ var Files = Backbone.Collection.extend({
         var self = this;
 
         this._rootPath = options.rootPath;
-        this._ev = new EventSource("/fsev?p=" + this._rootPath);
         this._showHidden = options.showHidden;
         this._fileEvents = new Events([], { fs: this });
+
+        this._sock = io.connect(location.host + "/" + options.rootPath.replace(/\//g, "_"),
+            { rememberTransport: false, transports: ["websocket"] });
 
         if (options.hasOwnProperty("sortField"))
             this._sortField = options.sortField;
         if (options.hasOwnProperty("sortDesc"))
             this._sortDesc = options.sortDesc;
 
-        this._ev.addEventListener("create", function (ev) {
-            var data = JSON.parse(ev.data);
-
-            console.log("Created: " + data.path);
-
-            self.add(data, {merge: true});
+        this._sock.on("create", function (ev) {
+            console.log("Created: " + ev.path);
+            self.add(ev, {merge: true});
         });
 
-        this._ev.addEventListener("delete", function (ev) {
-            var data = JSON.parse(ev.data);
-
-            console.log("Deleted: " + data.path);
-
-            self.remove(data.name);
+        this._sock.on("delete", function (ev) {
+            console.log("Deleted: " + ev.path);
+            self.remove(ev.name);
         });
 
-        this._ev.addEventListener("modify", function (ev) {
-            var data = JSON.parse(ev.data);
-
-            console.log("Modified: " + data.path);
-
-            self.get(data.name).set(data);
+        this._sock.on("modify", function (ev) {
+            console.log("Modified: " + ev.path);
+            self.get(ev.name).set(ev);
         });
 
-        this._ev.addEventListener("rename", function (ev) {
-            var data = JSON.parse(ev.data);
-
-            console.log("Renamed: " + data.path);
-
-            self.get(data.oldName).set(data);
+        this._sock.on("rename", function (ev) {
+            console.log("Renamed: " + ev.path);
+            self.get(ev.oldName).set(data);
         });
     },
 

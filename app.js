@@ -25,10 +25,10 @@ var path = require("path");
 var WebSocket = require("ws").Server;
 var busboy = require("express-busboy");
 var flash = require("connect-flash");
-var eventSource = require("event-source-emitter");
 var os = require("os");
 var fs = require("fs");
 var asock = require("./abstract_socket.js");
+var SocketIO = require("socket.io");
 
 // Express application
 var app = express();
@@ -148,19 +148,22 @@ app.post("/login",
         res.redirect("/index");
     });
 
+// Event socket
+var io = new SocketIO({ transports: ["websocket"] });
+
+io.listen(server);
+
 // API
-app.get("/fs/:part", ensureAuthenticated, fsroute.get);
-app.get("/fsev", ensureAuthenticated, fsroute.event);
+app.get("/fs/:part", ensureAuthenticated, function (req, res) {
+    return fsroute.get(io, req, res);
+});
+
+//app.get("/fsev", ensureAuthenticated, fsroute.event);
 app.get("/dl", ensureAuthenticated, fsroute.dl);
 app.post("/up", ensureAuthenticated, fsroute.up);
 app.post("/rm", ensureAuthenticated, fsroute.rm);
 app.post("/mv", ensureAuthenticated, fsroute.mv);
 app.post("/mkdir", ensureAuthenticated, fsroute.mkdir);
-
-// Keep-alive. This event source will be enabled for the lifetime of the server process.
-app.get("/ka", function (req, res) {
-    eventSource(req, res, { keepAlive: true });
-});
 
 process.stdout.on("close", function () {
     process.exit();

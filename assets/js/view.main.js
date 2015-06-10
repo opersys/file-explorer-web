@@ -62,8 +62,8 @@ var MainView = Backbone.View.extend({
         self._optionsOverlayId = _.uniqueId("optionsOverlay");
         self._errorsOverlayId = _.uniqueId("errorsOverlay");
 
-        self._ka = new EventSource("/ka");
-        self._ka.onerror = function () {
+        self._ka = io.connect(location.host + "/", { rememberTransport: false, transports: ["websocket"] });
+        self._ka.on("disconnect", function () {
             new StoppedPopup({
                 context: self,
                 buttons: [
@@ -78,7 +78,7 @@ var MainView = Backbone.View.extend({
                     }
                 ]
             }).render();
-        };
+        });
 
         self._options = opts.options;
 

@@ -45,7 +45,14 @@ function ensureAuthenticated(req, res, next) {
     if (req.isAuthenticated())
         return next();
 
-    res.redirect('/login');
+    res.redirect("/login");
+}
+
+function ensureModernized(req, res, next) {
+    if (!req.session.wasModernized)
+        res.redirect("/modernizr");
+    else
+        return next();
 }
 
 // Routes;
@@ -125,15 +132,32 @@ passport.deserializeUser(function(pass, done) {
 // Routes configuration.
 //
 
-app.get("/", ensureAuthenticated, function (req, res) { res.redirect("/index"); });
+app.get("/", ensureAuthenticated, ensureModernized, function (req, res) { res.redirect("/index"); });
+
+// FIXME: This way of doing seems pretty horrible for me but it's working right now and there is not
+//       and awful lot of pages to deal with so I think we better leave this alone.
 
 // Static pages.
+app.get("/modernizr",
+    ensureAuthenticated,
+    function (req, res) {
+        req.session.wasModernized = true;
+        res.sendFile("public/modernizr.html", { root: process.cwd() });
+    });
+
 app.get("/index",
     ensureAuthenticated,
+    ensureModernized,
     function (req, res) { res.sendFile("public/index.html", { root: process.cwd() }); });
+
 app.get("/apropos",
     ensureAuthenticated,
+    ensureModernized,
     function (req, res) { res.sendFile("public/apropos.html", { root: process.cwd() }); });
+
+app.get("/unsupported",
+    ensureAuthenticated,
+    function (req, res) { res.sendFile("public/unsupported.html", { root: process.cwd() }); });
 
 // Login
 app.get("/login",

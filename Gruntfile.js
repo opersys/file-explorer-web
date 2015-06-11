@@ -138,7 +138,8 @@ module.exports = function (grunt) {
                     "external/slickgrid/plugins/slick.rowselectionmodel.js",
                     "external/jquery.cookie/jquery.cookie.js",
                     "external/dropzone/dropzone.js",
-                    "external/opentip/opentip-jquery.min.js"
+                    "external/opentip/opentip-jquery.min.js",
+                    "external/modernizr/modernizr.custom.60782.js"
                 ],
                 dest: "dist/public/js/<%= pkg.name %>_libs.js"
             },

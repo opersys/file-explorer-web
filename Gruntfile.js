@@ -89,6 +89,8 @@ module.exports = function (grunt) {
                 files: [
                     // FontAwesome
                     { src: [ "external/FontAwesome/font-awesome.min.css" ], dest: "dist/public/css/font-awesome.min.css" },
+                    // Modernizr
+                    { src: [ "external/modernizr/modernizr.custom.60782.js" ], dest: "dist/public/js/modernizr.js" },
                     { expand: true,
                         cwd: "external/FontAwesome",
                         src: ["*.otf", "*.eot", "*.svg", "*.ttf", "*.woff"],
@@ -138,8 +140,7 @@ module.exports = function (grunt) {
                     "external/slickgrid/plugins/slick.rowselectionmodel.js",
                     "external/jquery.cookie/jquery.cookie.js",
                     "external/dropzone/dropzone.js",
-                    "external/opentip/opentip-jquery.min.js",
-                    "external/modernizr/modernizr.custom.60782.js"
+                    "external/opentip/opentip-jquery.min.js"
                 ],
                 dest: "dist/public/js/<%= pkg.name %>_libs.js"
             },

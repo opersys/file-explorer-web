@@ -49,7 +49,7 @@ function ensureAuthenticated(req, res, next) {
 }
 
 function ensureModernized(req, res, next) {
-    if (!req.session.wasModernized)
+    if (!req.session.isSupported)
         res.redirect("/modernizr");
     else
         return next();
@@ -132,32 +132,38 @@ passport.deserializeUser(function(pass, done) {
 // Routes configuration.
 //
 
-app.get("/", ensureAuthenticated, ensureModernized, function (req, res) { res.redirect("/index"); });
+app.get("/", ensureModernized, ensureAuthenticated, function (req, res) { res.redirect("/index"); });
 
 // FIXME: This way of doing seems pretty horrible for me but it's working right now and there is not
 //       and awful lot of pages to deal with so I think we better leave this alone.
 
 // Static pages.
 app.get("/modernizr",
-    ensureAuthenticated,
     function (req, res) {
-        req.session.wasModernized = true;
+        // Mark the browser as supported before redirection to the Modernizr check page.
+        // If the Modernizr page ends up deciding the browser doesn't work, it'll redirect
+        // to the "unsupported" page which will redirect clear this flag.
+        req.session.isSupported = true;
         res.sendFile("public/modernizr.html", { root: process.cwd() });
     });
 
 app.get("/index",
-    ensureAuthenticated,
     ensureModernized,
+    ensureAuthenticated,
     function (req, res) { res.sendFile("public/index.html", { root: process.cwd() }); });
 
 app.get("/apropos",
-    ensureAuthenticated,
     ensureModernized,
+    ensureAuthenticated,
     function (req, res) { res.sendFile("public/apropos.html", { root: process.cwd() }); });
 
+// Entering this page means we set the browser as 'unsupported' and we will always redirect
+// to that page for the session.
 app.get("/unsupported",
-    ensureAuthenticated,
-    function (req, res) { res.sendFile("public/unsupported.html", { root: process.cwd() }); });
+    function (req, res) {
+        req.session.isSupported = false;
+        res.sendFile("public/unsupported.html", { root: process.cwd() });
+    });
 
 // Login
 app.get("/login",

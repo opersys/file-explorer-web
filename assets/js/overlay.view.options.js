@@ -28,7 +28,7 @@ var OptionsOverlay = Backbone.View.extend({
         overlayDiv = this.$el;
         overlayDiv.css("margin", "1em");
 
-        ul = $("<ul></ul>");
+        overlayUl = $("<ul></ul>").css("list-style", "none");
         optHiddenLi = $("<li></li>")
             .append(
                 $("<input></input>")
@@ -69,10 +69,11 @@ var OptionsOverlay = Backbone.View.extend({
                     .attr("for", "optConfirmRename")
                     .text("Confirm rename"));
 
-        overlayDiv.append([
+        overlayUl.append([
             optHiddenLi,
             optConfirmRemoveLi,
             optConfirmRenameLi
         ]);
+        overlayDiv.append(overlayUl);
     }
 });

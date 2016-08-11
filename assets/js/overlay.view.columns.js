@@ -34,7 +34,7 @@ var ColumnsOverlay = Backbone.View.extend({
         var self = this;
         var overlayEl;
         var overlayDiv = $("<div></div>");
-        var overlayUl = $("<ul></ul>");
+        var overlayUl = $("<ul></ul>").css("list-style", "none");
 
         overlayEl = this.$el;
         overlayDiv.css("margin", "1em");

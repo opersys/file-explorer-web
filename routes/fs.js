@@ -210,6 +210,7 @@ var FSWatcher = function (rpath, io) {
     self._pathSock = io.of(rpath.replace(/\//g, "_"));
     self._rpath = rpath;
 
+    // addWatch will return -1 if the watch is bad.
     self._watchId = inotify.addWatch({
         path: rpath,
         watch_for: Inotify.IN_CREATE | Inotify.IN_DELETE |
@@ -224,7 +225,8 @@ var FSWatcher = function (rpath, io) {
 };
 
 FSWatcher.prototype.close = function () {
-    inotify.removeWatch(this._watchId);
+    if (this._watchId > -1)
+        inotify.removeWatch(this._watchId);
 };
 
 FSWatcher.prototype._inotify = function (event) {

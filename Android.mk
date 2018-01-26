@@ -1,0 +1,13 @@
+LOCAL_PATH := $(call my-dir)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := OsysFE
+LOCAL_MODULE_CLASS := EXECUTABLES
+LOCAL_MODULE_TAGS := optional
+LOCAL_SRC_FILES := OsysFE
+LOCAL_MODULE_PATH := $(TARGET_OUT)/bin
+
+LOCAL_POST_INSTALL_CMD := \
+	mkdir -p $(TARGET_OUT)/Osys/FE; \
+	cp -af $(LOCAL_PATH)/dist_arm64/* $(TARGET_OUT)/Osys/FE
+include $(BUILD_PREBUILT)

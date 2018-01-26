@@ -27,7 +27,7 @@ var busboy = require("express-busboy");
 var flash = require("connect-flash");
 var os = require("os");
 var fs = require("fs");
-var asock = require("./abstract_socket.js");
+var asock = require("abstract-socket");
 var SocketIO = require("socket.io");
 
 // Express application

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Opersys inc.
+ * Copyright (C) 2014-2018 Opersys inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,21 +15,18 @@
  */
 
 var _ = require("underscore");
+var fs = require("fs");
 var fsx = require("fs-extra");
 var path = require("path");
-var access = require("../unix-access.js");
-var posix = require("../posix.js");
-var Inotify = require("../inotify.js").Inotify;
+var pwd = require("pwd");
+var Inotify = require("node-inotify").Inotify;
 var Cache = require("mem-cache");
 var async = require("async");
+var os = require("os");
 
 // Current inotify instance.
 var inotify = new Inotify();
-
-//
 var renameCache = new Cache();
-
-//
 var evTrap = {};
 
 var fswatcher = null;
@@ -42,7 +39,7 @@ var _adapters = {
             id: stat.path,
             text: stat.name,
             state: {
-                opened: stat.name == "/",
+                opened: stat.name === "/",
                 disabled: false,
                 selected: false
             },
@@ -142,27 +139,47 @@ function stat2json(filepath, fnadapter, filest) {
         } catch (ex) {
             filest = fnadapter({
                 path: filepath,
-                name: filepath == "/" ? "/" : path.basename(filepath),
+                name: filepath === "/" ? "/" : path.basename(filepath),
                 error: "stat() error: " + ex
             });
         }
     }
 
     try {
-        upwd = posix.getpwnam(filest.uid);
+        upwd = pwd.getpwnam(filest.uid);
     } catch (ex) {
         upwd = "?";
     }
     try {
-        gpwd = posix.getgrnam(filest.gid);
+        gpwd = pwd.getgrnam(filest.gid);
     } catch (ex) {
         gpwd = "?";
     }
 
-    canRead = access.sync(filepath, "r");
-    canWrite = access.sync(filepath, "w");
-    canEnter = access.sync(filepath, "x");
+    // Ugh, I hope there is a good rationale for accessSync to be like that because
+    // that is fugly!
 
+    try {
+        fs.accessSync(filepath, fs.constants.R_OK);
+        canRead = true;
+    } catch (e) {
+        canRead = false;
+    }
+
+    try {
+        fs.accessSync(filepath, fs.constants.W_OK);
+        canWrite = true;
+    } catch (e) {
+        canWrite = false;
+    }
+
+    try {
+        fs.accessSync(filepath, fs.constants.X_OK);
+        canEnter = true;
+    } catch (e) {
+        canEnter = false;
+    }
+    
     // Judge the type of the file
     if (filest.isDirectory() && (!canRead || !canEnter))
         type = "no-access";
@@ -218,6 +235,9 @@ var FSWatcher = function (rpath, io) {
                    Inotify.IN_MOVED_FROM | Inotify.IN_MOVED_TO,
         callback: function () { self._inotify.apply(self, arguments); }
     });
+
+    if (self._watchId === -1)
+        console.log("Could not watch directory: " + rpath);
 
     // Rate control variables.
     self._lastCbTime = null;
@@ -296,7 +316,7 @@ FSWatcher.prototype._inotify = function (event) {
     else if (event.mask & Inotify.IN_ATTRIB) evType = "modify";
     else if (event.mask & Inotify.IN_DELETE) evType = "delete";
 
-    if (evType && evType != "delete") {
+    if (evType && evType !== "delete") {
         try {
             var evData = stat2json(fpath);
 
@@ -313,7 +333,7 @@ FSWatcher.prototype._inotify = function (event) {
     }
     // We don't have the full stat for the delete event but at least
     // pass the name entry to the interface.
-    else if (evType && evType == "delete") {
+    else if (evType && evType === "delete") {
         this._pathSock.emit("delete", {
             path: fpath,
             name: path.basename(fpath)
@@ -365,7 +385,7 @@ exports.dl = function (req, res) {
 
                         async.until(
                             function () {
-                                return sentTotal == buffsz * 10 || lastbread == 0;
+                                return sentTotal === buffsz * 10 || lastbread === 0;
                             },
                             function (callback) {
                                 var buff = new Buffer(buffsz);
@@ -408,7 +428,7 @@ exports.up = function (req, res) {
             var target = path.join(req.query.p, file.filename);
 
             // Handle overwrite.
-            if (req.query.o && req.query.o == "0") {
+            if (req.query.o && req.query.o === "0") {
                 var postfix = "", idx = 0;
 
                 while (fsx.existsSync(target + postfix)) {
@@ -461,7 +481,7 @@ exports.get = function (io, req, res) {
     else rpath = req.query.p;
 
     // No 'h' parameter means we just show all.
-    showHidden = !(req.query.h && req.query.h == "0");
+    showHidden = !(req.query.h && req.query.h === "0");
 
     if (fswatcher != null)
         fswatcher.close();
@@ -472,7 +492,7 @@ exports.get = function (io, req, res) {
         if (err) {
             fslist.push({
                 path: rpath,
-                name: rpath == "/" ? "/" : path.basename(rpath),
+                name: rpath === "/" ? "/" : path.basename(rpath),
                 error: "readdir() failed: " + err
             });
         }
@@ -485,13 +505,13 @@ exports.get = function (io, req, res) {
             } catch (ex) {
                 fslist.push({
                     path: filepath,
-                    name: filepath == "/" ? "/" : path.basename(filepath),
+                    name: filepath === "/" ? "/" : path.basename(filepath),
                     error: "stat() failed: " + ex
                 });
                 return;
             }
 
-            if (!showHidden && file.charAt(0) == ".")
+            if (!showHidden && file.charAt(0) === ".")
                 return;
 
             // Crack open symbolic links
@@ -518,7 +538,12 @@ exports.get = function (io, req, res) {
             // If a directory was requested, create a new channel in the websocket
 
             if (isFiles || isDir) {
-                fslist.push(stat2json(filepath, fnadapter, filest));
+                try {
+                    fslist.push(stat2json(filepath, fnadapter, filest));
+                } catch (ex) {
+                    // Nevermind!
+                    console.log("Failed: " + ex);
+                }
             }
         });
 

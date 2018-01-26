@@ -1,0 +1,39 @@
+// Copyright (C) 2014-2018, Opersys inc.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+doctype html
+html
+	head
+		title File Explorer - Login
+		link(rel="stylesheet", href="css/file-explorer_styles.css")
+		link(rel="stylesheet", href="css/font-awesome.min.css")
+		script(text="text/javascript", src="/js/file-explorer_libs.js")
+		script(text="text/javascript", src="/js/file-explorer_login.js")
+	body
+		div.loginbox
+			div.loginlogo
+				img(src="images/opersys_land_logo.png")
+			div.loginform
+				h1
+					|File Explorer - Login
+				div
+					|To proceed, enter the password generated in the File Explorer
+					|UI on your device.
+				form(action="/login", method="post")
+					input(type="hidden", name="username", value="foo")
+					input(type="password", name="password", placeholder="password")
+					input(type="submit", value="log in")
+			div#loginerror.loginerror
+
+

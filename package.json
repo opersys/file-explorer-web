@@ -5,34 +5,57 @@
     "scripts": {
         "start": "node-android app.js"
     },
+    "prebuilts": {
+        "modules": {
+            "ia32": [
+                "https://github.com/fdgonthier/pwd/releases/download/1.1.0/pwd2-1.1.0_ia32.tar.gz",
+                "https://github.com/fdgonthier/node-inotify/releases/download/v1.4.2/inotify-1.4.2_ia32.tar.gz",
+                "https://github.com/fdgonthier/node-abstractsocket/releases/download/v2.0.0/abstract-socket-2.0.0_ia32.tar.gz"
+            ],
+            "arm": [
+                "https://github.com/fdgonthier/pwd/releases/download/1.1.0/pwd2-1.1.0_arm.tar.gz",
+                "https://github.com/fdgonthier/node-inotify/releases/download/v1.4.2/inotify-1.4.2_arm.tar.gz",
+                "https://github.com/fdgonthier/node-abstractsocket/releases/download/v2.0.0/abstract-socket-2.0.0_arm.tar.gz"
+            ],
+            "arm64": [
+                "https://github.com/fdgonthier/pwd/releases/download/1.1.0/pwd2-1.1.0_arm64.tar.gz",
+                "https://github.com/fdgonthier/node-inotify/releases/download/v1.4.2/inotify-1.4.2_arm64.tar.gz",
+                "https://github.com/fdgonthier/node-abstractsocket/releases/download/v2.0.0/abstract-socket-2.0.0_arm64.tar.gz"
+            ]
+        }
+    },
     "dependencies": {
-        "express": "4.12.3",
-        "express-session": "1.10.4",
-        "express-busboy": "2.4.0",
+        "async": "0.9.2",
         "connect-flash": "0.1.1",
+        "express": "4.12.3",
+        "express-busboy": "2.4.0",
+        "express-session": "1.10.4",
+        "fs-extra": "0.16.5",
+        "mem-cache": "0.0.4",
+        "morgan": "1.5.2",
         "passport": "0.2.1",
         "passport-local": "1.0.0",
         "serve-static": "1.9.2",
-        "morgan": "1.5.2",
+        "socket.io": "1.3.5",
         "underscore": "1.8.2",
-        "ws": "0.7.1",
-        "mem-cache": "0.0.4",
-        "fs-extra": "0.16.5",
-        "yargs": "3.9.1",
-        "async": "0.9.2",
-        "socket.io": "1.3.5"
+        "ws": "^4.0.0",
+        "yargs": "3.9.1"
     },
     "devDependencies": {
-        "jade": "*",
+        "got": "^8.0.3",
         "grunt": "~0.4.2",
-        "grunt-contrib-uglify": ">=0.4.0",
-        "grunt-contrib-concat": ">=0.3.0",
+        "grunt-chmod": "*",
         "grunt-contrib-compress": ">=0.7.0",
+        "grunt-contrib-concat": ">=0.3.0",
+        "grunt-contrib-copy": "^1.0.0",
+        "grunt-contrib-pug": "^1.0.0",
+        "grunt-contrib-uglify": ">=0.4.0",
+        "grunt-copy-to": "*",
         "grunt-css": "*",
-        "grunt-copy-to": "*",   
-        "grunt-mkdir": "*",
-        "grunt-jade": "*",
         "grunt-exec": "*",
-        "grunt-chmod": "*"
+        "grunt-jade": "*",
+        "grunt-mkdir": "*",
+        "jade": "*",
+        "tarball-extract": "0.0.6"
     }
 }

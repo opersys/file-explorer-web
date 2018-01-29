@@ -36,7 +36,7 @@ module.exports = function (grunt) {
         pkg: grunt.file.readJSON("package.json")
     });
 
-    _.each(["arm", "arm64", "ia32"], function (arch) {
+    _.each(["arm", "arm64", "ia32", "x86_64"], function (arch) {
         var mkdist = function (arch) {
             return function () {
                 var args = Array.prototype.slice.call(arguments);
@@ -246,7 +246,10 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-contrib-concat");
     grunt.loadNpmTasks("grunt-contrib-pug");
 
-    grunt.registerTask("oreo", ["dist_arm64"]);
+    grunt.registerTask("arm64", ["dist_arm64"]);
+    grunt.registerTask("arm", ["dist_arm"]);
+    grunt.registerTask("ia32", ["dist_ia32"]);
+    grunt.registerTask("x86_64", ["dist_x86_64"]);
 };
 
 
